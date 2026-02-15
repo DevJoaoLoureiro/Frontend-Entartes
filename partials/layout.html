@@ -1,0 +1,75 @@
+<!-- MOBILE TOPBAR -->
+<nav class="navbar navbar-dark bg-dark d-lg-none px-3">
+  <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <span class="navbar-brand ms-2">Backoffice</span>
+
+  <a href="notificacoes.html" class="text-white position-relative text-decoration-none">
+    <i class="fa-solid fa-bell fs-5"></i>
+    <span id="notifyDot" class="notify-dot" style="display:none;"></span>
+  </a>
+</nav>
+
+<!-- OFFCANVAS (MOBILE SIDEBAR) -->
+<div class="offcanvas offcanvas-start text-bg-dark d-lg-none" tabindex="-1" id="sidebarOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="brandTitle">Backoffice</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <div id="sidebarContentMobile"></div>
+  </div>
+</div>
+
+<div class="d-flex">
+  <!-- DESKTOP SIDEBAR -->
+  <aside class="sidebar p-3 d-none d-lg-block">
+    <div class="brand mb-3" id="brandTitleDesktop">Backoffice</div>
+    <hr class="border-secondary">
+    <div id="sidebarContentDesktop"></div>
+
+    <hr class="border-secondary mt-4">
+    <button class="btn btn-outline-light w-100" onclick="logout()">
+      <i class="fa-solid fa-power-off me-2"></i> Logout
+    </button>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="flex-grow-1">
+    <!-- DESKTOP TOPBAR -->
+    <div class="topbar px-4 py-3 d-none d-lg-flex justify-content-between align-items-center">
+      <h4 class="m-0" id="pageTitle">Página</h4>
+      <div class="d-flex align-items-center gap-3">
+        <a href="notificacoes.html" class="position-relative text-decoration-none text-dark">
+          <i class="fa-solid fa-bell fs-5"></i>
+          <span id="notifyDotDesktop" class="notify-dot" style="display:none;"></span>
+        </a>
+        <div class="small-muted">Utilizador: <b id="topUserInfo">-</b></div>
+      </div>
+    </div>
+
+    <div class="p-4" id="pageContent"></div>
+  </main>
+</div>
+
+<!-- SIDEBAR NAV (reutilizável) -->
+<template id="sidebarTemplate">
+  <nav class="nav flex-column px-3 px-lg-0">
+    <a class="nav-link" data-page="dashboard" data-roles="ADMIN,SUPER_ADMIN" href="dashboard.html"><i class="fa-solid fa-house me-2"></i> Dashboard</a>
+    <a class="nav-link" data-page="calendario" data-roles="ENCARREGADO,PROFESSOR,ADMIN,SUPER_ADMIN" href="calendario.html"><i class="fa-solid fa-calendar-days me-2"></i> Calendário</a>
+
+    <a class="nav-link" data-page="alunos" data-roles="ADMIN,SUPER_ADMIN" href="alunos.html"><i class="fa-solid fa-user me-2"></i> Alunos</a>
+    <a class="nav-link" data-page="turmas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="turmas.html"><i class="fa-solid fa-users me-2"></i> Turmas</a>
+    <a class="nav-link" data-page="sessoes" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="sessoes_aula.html"><i class="fa-solid fa-clock me-2"></i> Sessões</a>
+    <a class="nav-link" data-page="presencas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="presencas.html"><i class="fa-solid fa-check me-2"></i> Presenças</a>
+
+    <a class="nav-link" data-page="eventos" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="eventos.html"><i class="fa-solid fa-bullhorn me-2"></i> Eventos</a>
+    <a class="nav-link" data-page="inventario" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="inventario.html"><i class="fa-solid fa-boxes-stacked me-2"></i> Inventário</a>
+    <a class="nav-link" data-page="marketplace" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="marketplace.html"><i class="fa-solid fa-store me-2"></i> Marketplace</a>
+
+    <a class="nav-link" data-page="pagamentos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="pagamentos.html"><i class="fa-solid fa-euro-sign me-2"></i> Pagamentos</a>
+    <a class="nav-link" data-page="utilizadores" data-roles="ADMIN,SUPER_ADMIN" href="utilizadores.html"><i class="fa-solid fa-user-gear me-2"></i> Utilizadores</a>
+  </nav>
+</template>

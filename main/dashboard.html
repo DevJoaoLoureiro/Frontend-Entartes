@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+   <div id="layoutHost"></div>
+  <template id="pageTemplate">
+
+
+        <main class="flex-grow-1">
+          
+          <div class="topbar px-4 py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0">Dashboard</h4>
+            <div class="d-flex align-items-center gap-3">
+              <a href="notificacoes.html" class="position-relative text-decoration-none text-dark">
+                <i class="fa-solid fa-bell fs-5"></i>
+                <span id="notifyDot" class="notify-dot" style="display:none;"></span>
+              </a>
+              <div class="small-muted">Utilizador: <b id="topUserInfo">-</b></div>
+            </div>
+          </div>
+
+          <div class="p-4">
+            
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card kpi-card p-3">
+          <div class="small-muted">Total de alunos</div>
+          <div class="kpi-value" id="kpiAlunos">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card kpi-card p-3">
+          <div class="small-muted">Turmas ativas</div>
+          <div class="kpi-value" id="kpiTurmas">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card kpi-card p-3">
+          <div class="small-muted">Notificações por ler</div>
+          <div class="kpi-value" id="kpiNotif">0</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <div class="card card-soft p-3">
+          <h6 class="mb-2">Próximas sessões (demo)</h6>
+          <div class="small-muted mb-2">Para admin/professor ver rapidamente o calendário.</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle mb-0">
+              <thead><tr><th>Turma</th><th>Data</th><th>Hora</th><th>Estado</th></tr></thead>
+              <tbody id="tblProximas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card card-soft p-3">
+          <h6 class="mb-2">Ações rápidas</h6>
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="sessoes_aula.html"><i class="fa-solid fa-plus me-2"></i>Criar sessão</a>
+            <a class="btn btn-outline-secondary" href="eventos.html"><i class="fa-solid fa-bullhorn me-2"></i>Publicar evento</a>
+            <a class="btn btn-outline-dark" href="notificacoes.html"><i class="fa-solid fa-bell me-2"></i>Ver notificações</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+          </div>
+        </main>
+      </div>
+
+  </template>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+   <script src="../js/layout.js"></script>
+  <script src="../js/dashboard.js"></script>
+
+
+  <script>
+
+      requireAuth();
+      setUserInfo();
+      applyRoleUI();
+      setActiveMenu("dashboard");
+  (async () => {
+      await loadLayout({ pageTitle: "Dashboard", activePage: "dashboard" });
+
+      
+      const pageContent = document.getElementById("pageContent");
+      if (!pageContent) throw new Error("pageContent não existe no layout.html");
+
+      const tpl = document.getElementById("pageTemplate");
+      if (!tpl) throw new Error("pageTemplate não existe no dashboard.html");
+
+      pageContent.appendChild(tpl.content.cloneNode(true));
+
+      if (typeof initDashboard === "function") initDashboard();
+    })().catch(err => console.error(err));
+  </script>
+
+</body>
+</html>
+

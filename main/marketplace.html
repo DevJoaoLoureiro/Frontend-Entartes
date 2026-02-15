@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketplace</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+  <div id="layoutHost"></div>
+
+  <template id="pageTemplate">
+
+    <div class="d-flex gap-2 mb-3">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAnuncio" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN">
+        <i class="fa-solid fa-plus me-2"></i> Novo anúncio
+      </button>
+
+      <input id="pesquisaAnuncio" class="form-control" placeholder="Pesquisar por título...">
+
+      <select id="filtroTipo" class="form-select" style="max-width: 220px;">
+        <option value="">Todos</option>
+        <option value="VENDA">Venda</option>
+        <option value="ALUGUER">Aluguer</option>
+      </select>
+    </div>
+
+    <div id="msgMarketplace" class="alert d-none"></div>
+
+    <div class="row g-3" id="listaMarketplace"></div>
+
+    <!-- MODAL: NOVO ANÚNCIO -->
+    <div class="modal fade" id="modalAnuncio" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form id="formAnuncio">
+            <div class="modal-header">
+              <h5 class="modal-title">Novo anúncio</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label">Título</label>
+                  <input id="mpTitulo" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Tipo</label>
+                  <select id="mpTipo" class="form-select" required>
+                    <option value="VENDA">Venda</option>
+                    <option value="ALUGUER">Aluguer</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Preço (€)</label>
+                  <input id="mpPreco" type="number" step="0.01" min="0" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Tamanho</label>
+                  <input id="mpTamanho" class="form-control" placeholder="ex: M / 36">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Estado</label>
+                  <select id="mpEstado" class="form-select">
+                    <option value="NOVO">Novo</option>
+                    <option value="USADO">Usado</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Descrição</label>
+                  <textarea id="mpDesc" class="form-control" rows="3"></textarea>
+                </div>
+              </div>
+
+              <div class="small-muted mt-3">
+                * Para já fica em mock. Depois ligamos ao backend (tabela marketplace_anuncios + mensagens).
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+              <button class="btn btn-primary" type="submit">Publicar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CONTACTO / COMPRA -->
+    <div class="modal fade" id="modalContacto" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form id="formContacto">
+            <div class="modal-header">
+              <h5 class="modal-title">Contactar / Comprar</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <input type="hidden" id="contactoId">
+
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label">Anúncio</label>
+                  <input id="contactoTitulo" class="form-control" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Preço</label>
+                  <input id="contactoPreco" class="form-control" disabled>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Mensagem</label>
+                  <textarea id="contactoMsg" class="form-control" rows="3" placeholder="Escreve uma mensagem..."></textarea>
+                </div>
+              </div>
+
+              <div class="small-muted mt-3">
+                * Depois vamos ligar isto ao backend para criar mensagens/notificações reais.
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+              <button class="btn btn-primary" type="submit">Enviar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/marketplace.js"></script>
+
+  <script>
+        requireAuth();
+      setUserInfo();
+      applyRoleUI();
+    (async () => {
+      await loadLayout({ pageTitle: "Marketplace", activePage: "marketplace" });
+
+      const pageContent = document.getElementById("pageContent");
+      const tpl = document.getElementById("pageTemplate");
+      pageContent.appendChild(tpl.content.cloneNode(true));
+
+      if (typeof initMarketplace === "function") initMarketplace();
+    })().catch(console.error);
+  </script>
+</body>
+</html>
