@@ -1,67 +1,162 @@
 function initTurmas() {
+  const tbl = document.getElementById("tblTurmas");
+  const pesquisa = document.getElementById("pesquisaTurma");
+  const filtroAtiva = document.getElementById("filtroAtiva");
+  const msg = document.getElementById("msgTurmas");
 
-  let turmas = JSON.parse(localStorage.getItem("turmas") || "[]");
+  const form = document.getElementById("formTurma");
+  const msgCriar = document.getElementById("msgCriarTurma");
+  const modalEl = document.getElementById("modalTurma");
+  const selProfessor = document.getElementById("turmaProfessor");
 
-  if (!turmas.length) {
-    turmas = [
-      { id: 1, nome: "Ballet Iniciados", professor: "Ana Costa", capacidade: 15 },
-      { id: 2, nome: "Hip Hop Teens", professor: "Rui Mendes", capacidade: 20 }
-    ];
-    localStorage.setItem("turmas", JSON.stringify(turmas));
+  if (!tbl || !pesquisa || !filtroAtiva || !msg || !form || !msgCriar || !modalEl || !selProfessor) {
+    console.error("Elementos de Turmas não encontrados (template não injetado?)");
+    return;
   }
 
-  const tbl = document.getElementById("tblTurmas");
-  const form = document.getElementById("formTurma");
-  const pesquisa = document.getElementById("pesquisaTurma");
+  let turmas = [];
+  let professores = [];
+
+  function showMsg(text, type = "info") {
+    msg.className = `alert alert-${type}`;
+    msg.textContent = text;
+    msg.classList.remove("d-none");
+    setTimeout(() => msg.classList.add("d-none"), 2500);
+  }
+
+  function showMsgCriar(text, type = "info") {
+    msgCriar.className = `alert alert-${type}`;
+    msgCriar.textContent = text;
+    msgCriar.classList.remove("d-none");
+  }
+  function hideMsgCriar() {
+    msgCriar.classList.add("d-none");
+    msgCriar.textContent = "";
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function boolVal(v) {
+    if (typeof v === "boolean") return v;
+    if (v === 1 || v === "1") return true;
+    if (v === 0 || v === "0") return false;
+    if (typeof v === "string") return v.toLowerCase() === "true";
+    return !!v;
+  }
+
+  function badgeAtiva(v) {
+    return boolVal(v)
+      ? `<span class="badge text-bg-success">Ativa</span>`
+      : `<span class="badge text-bg-secondary">Inativa</span>`;
+  }
+
+  function filtrar() {
+    const q = (pesquisa.value || "").trim().toLowerCase();
+    const ativaStr = (filtroAtiva.value || "").trim(); // "", "true", "false"
+
+    return turmas
+      .filter(t => {
+        if (!q) return true;
+        const bag = `${t.nome ?? ""} ${t.professorNome ?? ""}`.toLowerCase();
+        return bag.includes(q);
+      })
+      .filter(t => {
+        if (!ativaStr) return true;
+        const a = boolVal(t.ativa);
+        return ativaStr === "true" ? a : !a;
+      });
+  }
 
   function render() {
-    const q = pesquisa?.value?.toLowerCase() || "";
+    const list = filtrar();
 
-    const filtradas = turmas.filter(t =>
-      t.nome.toLowerCase().includes(q)
-    );
-
-    tbl.innerHTML = filtradas.map(t => `
+    tbl.innerHTML = list.map(t => `
       <tr>
         <td>${t.id}</td>
-        <td>${t.nome}</td>
-        <td>${t.professor || "-"}</td>
-        <td>${t.capacidade || "-"}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-danger" onclick="removerTurma(${t.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </td>
+        <td>${escapeHtml(t.nome)}</td>
+        <td>${t.capacidade ?? 0}</td>
+        <td>${escapeHtml(t.professorNome || "-")}</td>
+        <td>${badgeAtiva(t.ativa)}</td>
       </tr>
     `).join("");
+
+    if (!list.length) {
+      tbl.innerHTML = `<tr><td colspan="5" class="text-center small-muted">Sem turmas.</td></tr>`;
+    }
   }
 
-  window.removerTurma = (id) => {
-    if (!confirm("Remover turma?")) return;
-    turmas = turmas.filter(t => t.id !== id);
-    localStorage.setItem("turmas", JSON.stringify(turmas));
-    render();
-  };
+  async function carregarTurmas() {
+    try {
+      turmas = await apiGet("turmas"); // GET /api/turmas
+      render();
+    } catch (e) {
+      console.error(e);
+      showMsg("Erro a carregar turmas. Confirma GET /api/turmas.", "danger");
+      turmas = [];
+      render();
+    }
+  }
 
-  form?.addEventListener("submit", (e) => {
+  async function carregarProfessores() {
+    try {
+      professores = await apiGet("utilizadores/professores"); // GET /api/utilizadores/professores
+      selProfessor.innerHTML = `<option value="">— Sem professor —</option>` +
+        professores.map(p => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join("");
+    } catch (e) {
+      console.error(e);
+      selProfessor.innerHTML = `<option value="">(erro ao carregar professores)</option>`;
+    }
+  }
+
+  // filtros
+  pesquisa.addEventListener("input", render);
+  filtroAtiva.addEventListener("change", render);
+
+  // criar turma (POST /api/turmas)
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    hideMsgCriar();
 
-    const nova = {
-      id: turmas.length ? Math.max(...turmas.map(x => x.id)) + 1 : 1,
-      nome: document.getElementById("turmaNome").value,
-      professor: document.getElementById("turmaProfessor").value,
-      capacidade: Number(document.getElementById("turmaCapacidade").value)
+    const payload = {
+      nome: document.getElementById("turmaNome").value.trim(),
+      capacidade: Number(document.getElementById("turmaCapacidade").value || 0),
+      professorId: selProfessor.value ? Number(selProfessor.value) : null
+      // nivel: opcional — só se o teu dto suportar
     };
 
-    turmas.push(nova);
-    localStorage.setItem("turmas", JSON.stringify(turmas));
+    // se tiveres Nivel no DTO, descomenta:
+    const nivel = document.getElementById("turmaNivel").value.trim();
+    if (nivel) payload.nivel = nivel;
 
-    bootstrap.Modal.getInstance(document.getElementById("modalTurma")).hide();
-    form.reset();
-    render();
+    try {
+      await apiPost("turmas", payload);
+      showMsgCriar("Turma criada com sucesso!", "success");
+
+      form.reset();
+      selProfessor.value = "";
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+
+      await carregarTurmas();
+      showMsg("Turma criada.", "success");
+    } catch (err) {
+      console.error(err);
+      showMsgCriar(err.message || "Erro ao criar turma", "danger");
+    }
   });
 
-  pesquisa?.addEventListener("input", render);
+  // ao abrir modal, recarrega professores e limpa msg
+  modalEl.addEventListener("show.bs.modal", async () => {
+    hideMsgCriar();
+    await carregarProfessores();
+  });
 
-  render();
+  // init
+  carregarTurmas();
 }
