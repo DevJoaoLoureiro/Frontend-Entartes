@@ -2,11 +2,6 @@ function initEventos() {
   const user = getUser();
   const role = user?.perfil;
 
-  let eventos = [
-    { id: 1, titulo: "Torneio de Dança", local: "Pavilhão Municipal", inicio: "2026-03-02 10:00", fim: "2026-03-02 18:00", publico: true, desc: "Inscrições abertas até 20/02." },
-    { id: 2, titulo: "Audições - Grupo Avançado", local: "Sala 1", inicio: "2026-02-20 19:00", fim: "", publico: true, desc: "Trazer roupa confortável." },
-  ];
-
   const box = document.getElementById("listaEventos");
   const pesquisa = document.getElementById("pesquisaEvento");
   const form = document.getElementById("formEvento");
@@ -16,12 +11,26 @@ function initEventos() {
     return;
   }
 
-  function visible(e) {
-    if (role === "ENCARREGADO") return !!e.publico;
-    return true;
+  let todosEventos = [];
+
+  // ─── Helpers ───────────────────────────────────────────────
+  function formatDt(iso) {
+    if (!iso) return "-";
+    const d = new Date(iso);
+    return d.toLocaleString("pt-PT", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
   }
 
+  function toInputDt(iso) {
+    if (!iso) return "";
+    return iso.slice(0, 16);
+  }
+
+  // ─── Card ───────────────────────────────────────────────────
   function card(e) {
+    const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
     return `
       <div class="col-md-6">
         <div class="card card-soft p-3 h-100">
@@ -30,62 +39,130 @@ function initEventos() {
               <h6 class="mb-1">${e.titulo}</h6>
               <div class="small-muted">${e.local || "-"}</div>
             </div>
-            ${ (role === "ADMIN" || role === "SUPER_ADMIN")
-                ? `<button class="btn btn-sm btn-outline-danger" onclick="removerEvento(${e.id})"><i class="fa-solid fa-trash"></i></button>`
-                : ``}
+            ${isAdmin ? `
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary" onclick="editarEvento(${e.id})">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="removerEvento(${e.id})">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>` : ""}
           </div>
           <hr class="my-2">
-          <div class="small"><b>Início:</b> ${e.inicio}</div>
-          <div class="small"><b>Fim:</b> ${e.fim || "-"}</div>
-          <div class="mt-2">${e.desc || ""}</div>
+          <div class="small"><b>Início:</b> ${formatDt(e.dataInicio)}</div>
+          <div class="small"><b>Fim:</b> ${formatDt(e.dataFim)}</div>
+          <div class="mt-2">${e.descricao || ""}</div>
           <div class="mt-3 small-muted">Visível para encarregados: <b>${e.publico ? "Sim" : "Não"}</b></div>
         </div>
       </div>
     `;
   }
 
+  // ─── Render ─────────────────────────────────────────────────
   function filterList() {
     const q = (pesquisa?.value || "").trim().toLowerCase();
-    if (!q) return eventos;
-    return eventos.filter(e => (e.titulo || "").toLowerCase().includes(q));
+    if (!q) return todosEventos;
+    return todosEventos.filter(e => (e.titulo || "").toLowerCase().includes(q));
   }
 
   function render(list) {
-    const visiveis = list.filter(visible);
-    box.innerHTML = visiveis.map(card).join("") || `<div class="small-muted">Sem eventos.</div>`;
+    box.innerHTML = list.length
+      ? list.map(card).join("")
+      : `<div class="small-muted p-2">Sem eventos.</div>`;
   }
 
-  window.removerEvento = (id) => {
-    if (!confirm("Remover evento?")) return;
-    eventos = eventos.filter(e => e.id !== id);
+  function renderFiltered() {
     render(filterList());
+  }
+
+  // ─── Carregar ───────────────────────────────────────────────
+  async function carregarEventos() {
+    try {
+      todosEventos = await apiGet("eventos");
+      renderFiltered();
+    } catch (err) {
+      box.innerHTML = `<div class="text-danger small">Erro ao carregar eventos: ${err.message}</div>`;
+    }
+  }
+
+  // ─── Apagar ─────────────────────────────────────────────────
+  window.removerEvento = async (id) => {
+    if (!confirm("Remover evento?")) return;
+    try {
+      await apiDelete(`eventos/${id}`);
+      todosEventos = todosEventos.filter(e => e.id !== id);
+      renderFiltered();
+    } catch (err) {
+      alert("Erro ao remover evento: " + err.message);
+    }
   };
 
-  if (pesquisa) pesquisa.addEventListener("input", () => render(filterList()));
+  // ─── Editar ─────────────────────────────────────────────────
+  window.editarEvento = (id) => {
+    const e = todosEventos.find(x => x.id === id);
+    if (!e) return;
 
+    document.getElementById("evtTitulo").value = e.titulo || "";
+    document.getElementById("evtLocal").value = e.local || "";
+    document.getElementById("evtInicio").value = toInputDt(e.dataInicio);
+    document.getElementById("evtFim").value = toInputDt(e.dataFim);
+    document.getElementById("evtDesc").value = e.descricao || "";
+    document.getElementById("evtPublico").checked = !!e.publico;
+
+    form.dataset.editId = id;
+    document.querySelector("#modalEvento .modal-title").textContent = "Editar evento";
+
+    new bootstrap.Modal(document.getElementById("modalEvento")).show();
+  };
+
+  // Limpa o modal ao fechar
+  document.getElementById("modalEvento")?.addEventListener("hidden.bs.modal", () => {
+    form.reset();
+    delete form.dataset.editId;
+    document.getElementById("evtPublico").checked = true;
+    document.querySelector("#modalEvento .modal-title").textContent = "Novo evento";
+  });
+
+  // ─── Submit form ────────────────────────────────────────────
   if (form) {
-    form.addEventListener("submit", (ev) => {
+    form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
 
-      const novo = {
-        id: eventos.length ? Math.max(...eventos.map(x => x.id)) + 1 : 1,
+      const payload = {
         titulo: document.getElementById("evtTitulo").value.trim(),
-        local: document.getElementById("evtLocal").value.trim(),
-        inicio: document.getElementById("evtInicio").value.replace("T"," "),
-        fim: document.getElementById("evtFim").value ? document.getElementById("evtFim").value.replace("T"," ") : "",
-        desc: document.getElementById("evtDesc").value.trim(),
+        local: document.getElementById("evtLocal").value.trim() || null,
+        dataInicio: new Date(document.getElementById("evtInicio").value).toISOString(),
+        dataFim: document.getElementById("evtFim").value
+          ? new Date(document.getElementById("evtFim").value).toISOString()
+          : null,
+        descricao: document.getElementById("evtDesc").value.trim() || null,
         publico: document.getElementById("evtPublico").checked
       };
 
-      eventos.unshift(novo);
+      const editId = form.dataset.editId;
 
-      bootstrap.Modal.getInstance(document.getElementById("modalEvento"))?.hide();
-      form.reset();
-      document.getElementById("evtPublico").checked = true;
+      try {
+        if (editId) {
+          const updated = await apiPut(`eventos/${editId}`, payload);
+          const idx = todosEventos.findIndex(e => e.id === parseInt(editId));
+          if (idx !== -1) todosEventos[idx] = updated;
+        } else {
+          const novo = await apiPost("eventos", payload);
+          todosEventos.unshift(novo);
+        }
 
-      render(filterList());
+        bootstrap.Modal.getInstance(document.getElementById("modalEvento"))?.hide();
+        renderFiltered();
+      } catch (err) {
+        alert("Erro ao guardar evento: " + err.message);
+      }
     });
   }
 
-  render(eventos);
+  // ─── Pesquisa ───────────────────────────────────────────────
+  if (pesquisa) pesquisa.addEventListener("input", renderFiltered);
+
+  // ─── Init ───────────────────────────────────────────────────
+  carregarEventos();
 }
