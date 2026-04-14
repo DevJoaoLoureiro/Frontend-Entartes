@@ -16,7 +16,7 @@
   <template id="pageTemplate">
     <div class="d-flex gap-2 mb-3 align-items-center">
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCriarUser" data-roles="ADMIN,SUPER_ADMIN">
-        <i class="fa-solid fa-user-plus me-2"></i> 
+        <i class="fa-solid fa-user-plus me-2"></i>
       </button>
 
       <input id="pesquisaUser" class="form-control" placeholder="Pesquisar por nome / username / email...">
@@ -55,51 +55,34 @@
       </table>
     </div>
 
-    <!-- MODAL: CRIAR -->
+    <!-- MODAL: ENVIAR CONVITE -->
     <div class="modal fade" id="modalCriarUser" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <form id="formCriarUtilizador">
+          <form id="formConviteUtilizador">
             <div class="modal-header">
-              <h5 class="modal-title">Criar utilizador</h5>
+              <h5 class="modal-title">Enviar convite</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label">Nome</label>
-                  <input id="userNome" class="form-control" required>
-                </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input id="conviteEmail" type="email" class="form-control" required>
+              </div>
 
-                <div class="col-md-6">
-                  <label class="form-label">Username</label>
-                  <input id="userUsername" class="form-control" required>
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">Email</label>
-                  <input id="userEmail" type="email" class="form-control">
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">Password</label>
-                  <input id="userPassword" type="password" class="form-control" required minlength="4">
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">Perfil</label>
-                  <select id="userPerfil" class="form-select">
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                    <option value="PROFESSOR">PROFESSOR</option>
-                    <option value="ENCARREGADO">ENCARREGADO</option>
-                  </select>
-                </div>
+              <div class="mb-3">
+                <label class="form-label">Perfil</label>
+                <select id="convitePerfil" class="form-select" required>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                  <option value="PROFESSOR">PROFESSOR</option>
+                  <option value="ENCARREGADO">ENCARREGADO</option>
+                </select>
               </div>
 
               <div class="small-muted mt-3">
-                * A password vai para o backend, onde é feito o hash (BCrypt).
+                Será enviado um email com um link para o utilizador criar a própria conta.
               </div>
 
               <div id="msgCriarUser" class="alert d-none mt-3"></div>
@@ -108,7 +91,7 @@
             <div class="modal-footer">
               <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
               <button class="btn btn-primary" type="submit">
-                <i class="fa-solid fa-floppy-disk me-2"></i> Guardar
+                <i class="fa-solid fa-paper-plane me-2"></i> Enviar convite
               </button>
             </div>
           </form>

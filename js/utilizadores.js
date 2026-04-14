@@ -7,7 +7,7 @@ function initUtilizadores() {
 
   const msg = document.getElementById("msgUtilizadores");
 
-  const form = document.getElementById("formCriarUtilizador");
+  const form = document.getElementById("formConviteUtilizador");
   const msgCriar = document.getElementById("msgCriarUser");
   const modalEl = document.getElementById("modalCriarUser");
 
@@ -56,7 +56,7 @@ function initUtilizadores() {
   function filtrarLista() {
     const q = (pesquisa.value || "").trim().toLowerCase();
     const perfil = (filtroPerfil.value || "").trim();
-    const ativoStr = (filtroAtivo.value || "").trim(); // "", "true", "false"
+    const ativoStr = (filtroAtivo.value || "").trim();
 
     return utilizadores
       .filter(u => {
@@ -90,7 +90,6 @@ function initUtilizadores() {
       const perfil = escapeHtml((u.perfil || u.role || "").toUpperCase() || "-");
       const ativo = badgeAtivo(u.ativo);
 
-      // botões (se o backend não tiver, dá erro e nós mostramos msg)
       return `
         <tr>
           <td>${id}</td>
@@ -118,7 +117,7 @@ function initUtilizadores() {
 
   async function carregar() {
     try {
-      utilizadores = await apiGet("utilizadores"); // GET /api/utilizadores
+      utilizadores = await apiGet("utilizadores");
       render();
     } catch (e) {
       console.error(e);
@@ -128,12 +127,10 @@ function initUtilizadores() {
     }
   }
 
-  // ---- AÇÕES ----
   window.removerUser = async (id) => {
     if (!confirm("Remover utilizador?")) return;
 
     try {
-      // se já tiveres apiDelete, usa. Se não, faz fetch direto.
       if (typeof apiDelete === "function") {
         await apiDelete(`utilizadores/${id}`);
       } else {
@@ -170,42 +167,33 @@ function initUtilizadores() {
     }
   };
 
-  // ---- FILTROS ----
   pesquisa.addEventListener("input", render);
   filtroPerfil.addEventListener("change", render);
   filtroAtivo.addEventListener("change", render);
 
-  // ---- CRIAR (A TUA LÓGICA, IGUAL) ----
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     hideMsgCriar();
 
     const payload = {
-      nome: document.getElementById("userNome").value.trim(),
-      username: document.getElementById("userUsername").value.trim(),
-      email: document.getElementById("userEmail").value.trim() || null,
-      password: document.getElementById("userPassword").value,
-      perfil: document.getElementById("userPerfil").value
+      email: document.getElementById("conviteEmail").value.trim(),
+      perfil: document.getElementById("convitePerfil").value
     };
 
     try {
-      await apiPost("utilizadores", payload); // POST /api/utilizadores
-      showMsgCriar("Utilizador criado com sucesso!", "success");
+      await apiPost("utilizadores/convite", payload);
+      showMsgCriar("Convite enviado com sucesso!", "success");
 
       form.reset();
-
-      // fecha modal
       bootstrap.Modal.getInstance(modalEl)?.hide();
 
-      // atualiza lista
       await carregar();
     } catch (err) {
       console.error(err);
-      showMsgCriar(err.message || "Erro ao criar utilizador", "danger");
+      showMsgCriar(err.message || "Erro ao enviar convite", "danger");
     }
   });
 
-  // quando abrir modal, limpa msg
   modalEl.addEventListener("show.bs.modal", () => {
     hideMsgCriar();
   });
