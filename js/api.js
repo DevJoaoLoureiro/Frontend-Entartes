@@ -4,6 +4,25 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
+
+async function apiPatch(path, body) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_BASE_URL}/${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify(body ?? {})
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || "Erro no PATCH.");
+
+  return text ? JSON.parse(text) : null;
+}
+
 async function apiGet(endpoint) {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_BASE_URL}/${endpoint}`, {

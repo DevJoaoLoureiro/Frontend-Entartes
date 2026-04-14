@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turmas</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+  <div id="layoutHost"></div>
+
+  <template id="pageTemplate">
+    <div class="d-flex gap-2 mb-3 align-items-center">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTurma" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR">
+        <i class="fa-solid fa-plus me-2"></i> Nova turma
+      </button>
+
+      <input id="pesquisaTurma" class="form-control" placeholder="Pesquisar turma...">
+    </div>
+
+    <div id="msgTurmas" class="alert d-none"></div>
+
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered table-striped align-middle">
+        <thead>
+          <tr>
+            <th style="width:80px;">ID</th>
+            <th>Nome</th>
+            <th>Professor</th>
+            <th>Tipo de Aula</th>
+            <th style="width:120px;">Ativa</th>
+            <th style="width:160px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tblTurmas"></tbody>
+      </table>
+    </div>
+
+    <div id="secaoTurmaDetalhe" class="d-none">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <strong id="tituloTurmaSelecionada">Alunos da Turma</strong>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFecharDetalheTurma">
+            Fechar
+          </button>
+        </div>
+
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-9">
+              <label class="form-label">Adicionar aluno à turma</label>
+              <select id="selectAlunoTurma" class="form-select"></select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+              <button id="btnAdicionarAlunoTurma" class="btn btn-primary w-100" type="button">
+                <i class="fa-solid fa-user-plus me-2"></i>Adicionar
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead>
+                <tr>
+                  <th style="width:100px;">ID</th>
+                  <th>Aluno</th>
+                  <th style="width:140px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tblTurmaAlunos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NOVA TURMA -->
+    <div class="modal fade" id="modalTurma" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form id="formTurma">
+            <div class="modal-header">
+              <h5 class="modal-title">Nova Turma</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Nome</label>
+                  <input id="turmaNome" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Professor</label>
+                  <select id="turmaProfessor" class="form-select"></select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Tipo de Aula</label>
+                  <div class="d-flex gap-2">
+                    <select id="turmaTipoAula" class="form-select"></select>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalTipoAula">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="msgCriarTurma" class="alert d-none mt-3"></div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+              <button class="btn btn-primary" type="submit">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NOVO TIPO AULA -->
+    <div class="modal fade" id="modalTipoAula" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="formTipoAula">
+            <div class="modal-header">
+              <h5 class="modal-title">Novo Tipo de Aula</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Nome</label>
+                <input id="novoTipoNome" class="form-control" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Descrição</label>
+                <input id="novoTipoDesc" class="form-control">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Duração padrão (min)</label>
+                <input id="novoTipoDuracao" type="number" class="form-control">
+              </div>
+
+              <div id="msgCriarTipoAula" class="alert d-none mt-3"></div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+              <button class="btn btn-primary" type="submit">Criar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/turmas.js"></script>
+
+  <script>
+    requireAuth();
+    setUserInfo();
+    applyRoleUI();
+
+    (async () => {
+      await loadLayout({ pageTitle: "Turmas", activePage: "turmas" });
+
+      const pageContent = document.getElementById("pageContent");
+      const tpl = document.getElementById("pageTemplate");
+
+      if (!pageContent || !tpl) {
+        console.error("Layout ou template não encontrados.");
+        return;
+      }
+
+      pageContent.appendChild(tpl.content.cloneNode(true));
+
+      if (typeof initTurmas === "function") initTurmas();
+    })().catch(console.error);
+  </script>
+</body>
+</html>

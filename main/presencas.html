@@ -4,44 +4,61 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Presenças</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 
 <body>
-
-  <!-- Layout vai ser injetado aqui -->
   <div id="layoutHost"></div>
 
-  <!-- Template da página -->
   <template id="pageTemplate">
     <div class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Presenças</h5>
+        <button id="btnGuardarPresencas" class="btn btn-primary">
+          <i class="fa-solid fa-floppy-disk me-2"></i> Guardar presenças
+        </button>
+      </div>
 
-      <div class="mb-3">
-        <label class="form-label">Selecionar Sessão</label>
-        <select id="selectSessao" class="form-select"></select>
+      <div id="msgPresencas" class="alert d-none"></div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label">Selecionar Sessão</label>
+          <select id="selectSessao" class="form-select"></select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Adicionar aluno à sessão</label>
+          <div class="d-flex gap-2">
+            <select id="selectAlunoAdicionar" class="form-select"></select>
+            <button id="btnAdicionarAluno" class="btn btn-outline-primary" type="button">
+              <i class="fa-solid fa-user-plus"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="table-responsive">
         <table class="table table-bordered align-middle">
           <thead>
             <tr>
+              <th style="width:100px;">Aluno ID</th>
               <th>Aluno</th>
               <th style="width:120px;">Presente</th>
+              <th style="width:140px;">Ações</th>
             </tr>
           </thead>
           <tbody id="tblPresencas"></tbody>
         </table>
       </div>
-
     </div>
   </template>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
   <script src="../js/layout.js"></script>
   <script src="../js/presencas.js"></script>
 
@@ -62,6 +79,5 @@
       if (typeof initPresencas === "function") initPresencas();
     })();
   </script>
-
 </body>
 </html>
