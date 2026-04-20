@@ -54,21 +54,66 @@
   </main>
 </div>
 
-<!-- SIDEBAR NAV (reutilizável) -->
+<!-- SIDEBAR NAV -->
 <template id="sidebarTemplate">
   <nav class="nav flex-column px-3 px-lg-0">
-    <a class="nav-link" data-page="dashboard" data-roles="ADMIN,SUPER_ADMIN" href="dashboard.html"><i class="fa-solid fa-house me-2"></i> Dashboard</a>
-    <a class="nav-link" data-page="calendario" data-roles="ENCARREGADO,PROFESSOR,ADMIN,SUPER_ADMIN" href="calendario.html"><i class="fa-solid fa-calendar-days me-2"></i> Calendário</a>
 
-    <a class="nav-link" data-page="alunos" data-roles="ADMIN,SUPER_ADMIN" href="alunos.html"><i class="fa-solid fa-user me-2"></i> Alunos</a>
-    <a class="nav-link" data-page="sessoes" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="sessoes_aula.html"><i class="fa-solid fa-clock me-2"></i> Sessões</a>
-    <a class="nav-link" data-page="presencas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="presencas.html"><i class="fa-solid fa-check me-2"></i> Presenças</a>
-<a class="nav-link" data-page="presencas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="turmas.html"><i class="fa-solid fa-users me-2"></i> Turmas</a>
-    <a class="nav-link" data-page="eventos" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="eventos.html"><i class="fa-solid fa-bullhorn me-2"></i> Eventos</a>
-    <a class="nav-link" data-page="inventario" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="inventario.html"><i class="fa-solid fa-boxes-stacked me-2"></i> Inventário</a>
-    <a class="nav-link" data-page="marketplace" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN" href="marketplace.html"><i class="fa-solid fa-store me-2"></i> Marketplace</a>
+    <!-- ADMIN / SUPER ADMIN -->
+    <a class="nav-link" data-page="dashboard" data-roles="ADMIN,SUPER_ADMIN" href="dashboard.html">
+      <i class="fa-solid fa-house me-2"></i> Dashboard
+    </a>
 
-    <a class="nav-link" data-page="pagamentos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="pagamentos.html"><i class="fa-solid fa-euro-sign me-2"></i> Pagamentos</a>
-    <a class="nav-link" data-page="utilizadores" data-roles="ADMIN,SUPER_ADMIN" href="utilizadores.html"><i class="fa-solid fa-user-gear me-2"></i> Utilizadores</a>
+    <!-- COMUM -->
+    <a class="nav-link" data-page="calendario" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR,ENCARREGADO,ALUNO" href="calendario.html">
+      <i class="fa-solid fa-calendar-days me-2"></i> Calendário
+    </a>
+
+    <!-- GESTÃO ESCOLA -->
+    <a class="nav-link" data-page="alunos" data-roles="ADMIN,SUPER_ADMIN" href="alunos.html">
+      <i class="fa-solid fa-user-graduate me-2"></i> Alunos
+    </a>
+
+    <a class="nav-link" data-page="turmas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="turmas.html">
+      <i class="fa-solid fa-users me-2"></i> Turmas
+    </a>
+
+    <a class="nav-link" data-page="sessoes" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="sessoes_aula.html">
+      <i class="fa-solid fa-clock me-2"></i> Sessões
+    </a>
+
+    <a class="nav-link" data-page="coachings" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR,ENCARREGADO,ALUNO" href="coachings.html">
+      <i class="fa-solid fa-bolt me-2"></i> Coachings
+    </a>
+
+    <a class="nav-link" data-page="presencas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="presencas.html">
+      <i class="fa-solid fa-check me-2"></i> Presenças
+    </a>
+
+    <a class="nav-link" data-page="validar-presencas" data-roles="ENCARREGADO,ALUNO" href="presencas-validar.html">
+      <i class="fa-solid fa-circle-check me-2"></i> Validar Presenças
+    </a>
+
+    <!-- ÁREA PÚBLICA / PORTAL -->
+    <a class="nav-link" data-page="eventos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="eventos.html">
+      <i class="fa-solid fa-bullhorn me-2"></i> Eventos
+    </a>
+
+    <a class="nav-link" data-page="inventario" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="inventario.html">
+      <i class="fa-solid fa-boxes-stacked me-2"></i> Inventário
+    </a>
+
+    <a class="nav-link" data-page="marketplace" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="marketplace.html">
+      <i class="fa-solid fa-store me-2"></i> Marketplace
+    </a>
+
+    <a class="nav-link" data-page="pagamentos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="pagamentos.html">
+      <i class="fa-solid fa-euro-sign me-2"></i> Pagamentos
+    </a>
+
+    <!-- ADMIN -->
+    <a class="nav-link" data-page="utilizadores" data-roles="ADMIN,SUPER_ADMIN" href="utilizadores.html">
+      <i class="fa-solid fa-user-gear me-2"></i> Utilizadores
+    </a>
+
   </nav>
 </template>

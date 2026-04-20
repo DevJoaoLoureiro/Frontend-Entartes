@@ -8,16 +8,17 @@ function initSessoes() {
   const selectTurma = document.getElementById("turma");
   const selectEstudio = document.getElementById("estudio");
   const inputTipoAulaInfo = document.getElementById("tipoAulaInfo");
+  const chkInscricaoAberta = document.getElementById("inscricaoAberta");
 
   const tabPorDar = document.getElementById("tabPorDar");
-  const tabDadas = document.getElementById("tabDadas");
+  const tabTerminadas = document.getElementById("tabTerminadas");
 
   const msgCriarSessao = document.getElementById("msgCriarSessao");
 
   if (
     !tbl || !msg || !formSessao || !modalSessaoEl ||
     !selectTurma || !selectEstudio || !inputTipoAulaInfo ||
-    !tabPorDar || !tabDadas || !msgCriarSessao
+    !chkInscricaoAberta || !tabPorDar || !tabTerminadas || !msgCriarSessao
   ) {
     console.error("Elementos da página de sessões não encontrados.");
     return;
@@ -47,7 +48,7 @@ function initSessoes() {
   }
 
   function formatDT(dt) {
-    if (!dt) return "";
+    if (!dt) return "-";
     return new Date(dt).toLocaleString("pt-PT", {
       dateStyle: "short",
       timeStyle: "short"
@@ -61,6 +62,13 @@ function initSessoes() {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function badgeEstado(estado) {
+    if (estado === "AGENDADA") return `<span class="badge text-bg-primary">Agendada</span>`;
+    if (estado === "TERMINADA") return `<span class="badge text-bg-success">Terminada</span>`;
+    if (estado === "CANCELADA") return `<span class="badge text-bg-danger">Cancelada</span>`;
+    return `<span class="badge text-bg-secondary">${escapeHtml(estado || "-")}</span>`;
   }
 
   async function carregarDropdowns() {
@@ -99,11 +107,27 @@ function initSessoes() {
     inputTipoAulaInfo.value = turma.tipoAulaNome || "";
   }
 
+  function atualizarModoSessao() {
+    const isCoaching = chkInscricaoAberta.checked;
+
+    if (isCoaching) {
+      selectTurma.value = "";
+      selectTurma.disabled = true;
+      inputTipoAulaInfo.value = "Coaching / Sessão aberta";
+    } else {
+      selectTurma.disabled = false;
+      atualizarInfoTurma();
+    }
+  }
+
   function render() {
-    const lista = sessoes.filter(s => {
-      if (abaAtual === "POR_DAR") return !s.foiDada;
-      return s.foiDada;
-    });
+    // esta página mostra só sessões normais
+    const lista = sessoes
+      .filter(s => !s.inscricaoAberta)
+      .filter(s => {
+        if (abaAtual === "POR_DAR") return !s.foiDada;
+        return s.foiDada;
+      });
 
     if (!lista.length) {
       tbl.innerHTML = `<tr><td colspan="8" class="text-center">Sem sessões.</td></tr>`;
@@ -117,7 +141,7 @@ function initSessoes() {
         <td>${formatDT(s.fim)}</td>
         <td>${escapeHtml(s.turmaNome || "-")}</td>
         <td>${escapeHtml(s.tipoAulaNome || "-")}</td>
-        <td>${escapeHtml(s.estado || "-")}</td>
+        <td>${badgeEstado(s.estado)}</td>
         <td>${escapeHtml(s.sumario || "-")}</td>
         <td class="text-nowrap">
           <a href="presencas.html?sessaoId=${s.id}" class="btn btn-sm btn-primary me-2">
@@ -147,7 +171,7 @@ function initSessoes() {
   window.terminarSessao = async function(id) {
     try {
       await apiPatch(`sessoes/${id}/terminar`, {});
-      showMsg("Aula marcada como dada.", "success");
+      showMsg("Aula marcada como terminada.", "success");
       await carregarSessoes();
     } catch (err) {
       console.error(err);
@@ -158,18 +182,19 @@ function initSessoes() {
   tabPorDar.addEventListener("click", () => {
     abaAtual = "POR_DAR";
     tabPorDar.classList.add("active");
-    tabDadas.classList.remove("active");
+    tabTerminadas.classList.remove("active");
     render();
   });
 
-  tabDadas.addEventListener("click", () => {
-    abaAtual = "DADAS";
-    tabDadas.classList.add("active");
+  tabTerminadas.addEventListener("click", () => {
+    abaAtual = "TERMINADAS";
+    tabTerminadas.classList.add("active");
     tabPorDar.classList.remove("active");
     render();
   });
 
   selectTurma.addEventListener("change", atualizarInfoTurma);
+  chkInscricaoAberta.addEventListener("change", atualizarModoSessao);
 
   formSessao.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -178,36 +203,44 @@ function initSessoes() {
     try {
       const inicioVal = document.getElementById("inicio").value;
       const fimVal = document.getElementById("fim").value;
+      const isCoaching = chkInscricaoAberta.checked;
 
       if (!inicioVal || !fimVal) {
         showMsgCriar("Início e fim são obrigatórios.", "warning");
         return;
       }
 
-      if (!selectTurma.value) {
-        showMsgCriar("Seleciona uma turma.", "warning");
+      if (!isCoaching && !selectTurma.value) {
+        showMsgCriar("Seleciona uma turma para sessão normal.", "warning");
         return;
       }
 
       const dto = {
         dataInicio: new Date(inicioVal).toISOString(),
         dataFim: new Date(fimVal).toISOString(),
-        turmaId: parseInt(selectTurma.value, 10),
+        turmaId: isCoaching ? null : (selectTurma.value ? parseInt(selectTurma.value, 10) : null),
         estudioId: selectEstudio.value ? parseInt(selectEstudio.value, 10) : null,
         maxAlunos: document.getElementById("maxAlunos").value
           ? parseInt(document.getElementById("maxAlunos").value, 10)
           : null,
-        sumario: document.getElementById("sumario").value.trim() || null
+        sumario: document.getElementById("sumario").value.trim() || null,
+        inscricaoAberta: isCoaching
       };
 
       await apiPost("sessoes", dto);
 
       bootstrap.Modal.getInstance(modalSessaoEl)?.hide();
       formSessao.reset();
+      selectTurma.disabled = false;
       inputTipoAulaInfo.value = "";
 
       await carregarSessoes();
-      showMsg("Sessão criada com sucesso.", "success");
+
+      if (isCoaching) {
+        showMsg("Coaching criado com sucesso. Vai aparecer em Coachings.", "success");
+      } else {
+        showMsg("Sessão criada com sucesso.", "success");
+      }
     } catch (err) {
       console.error(err);
       showMsgCriar(err.message || "Erro ao criar sessão.", "danger");
@@ -220,6 +253,7 @@ function initSessoes() {
 
   carregarDropdowns().then(() => {
     atualizarInfoTurma();
+    atualizarModoSessao();
   });
 
   carregarSessoes();
