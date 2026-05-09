@@ -14,18 +14,25 @@
 
   <template id="pageTemplate">
 
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-outline-secondary" id="btnMarcarTodas">
-        <i class="fa-solid fa-check-double me-2"></i> Marcar todas como lidas
-      </button>
-
-      <select id="filtroLidas" class="form-select" style="max-width: 220px;">
-        <option value="todas">Todas</option>
-        <option value="nao_lidas">Não lidas</option>
-        <option value="lidas">Lidas</option>
-      </select>
-
-      <input id="pesquisaNotif" class="form-control" placeholder="Pesquisar...">
+    <div class="page-hdr">
+      <div class="page-hdr-row">
+        <div>
+          <div class="page-eyebrow">Comunicação</div>
+          <div class="page-title">Notificações</div>
+          <div class="page-sub">Centro de mensagens e alertas</div>
+        </div>
+        <div class="btn-group-row">
+          <input id="pesquisaNotif" class="form-control" style="width:180px;" placeholder="Pesquisar...">
+          <select id="filtroLidas" class="form-select" style="width:150px;">
+            <option value="todas">Todas</option>
+            <option value="nao_lidas">Não lidas</option>
+            <option value="lidas">Lidas</option>
+          </select>
+          <button class="btn btn-outline-secondary" id="btnMarcarTodas">
+            <i class="fa-solid fa-check-double me-1"></i> Marcar todas lidas
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="msgNotif" class="alert d-none"></div>

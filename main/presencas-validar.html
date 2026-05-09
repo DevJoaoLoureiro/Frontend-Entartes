@@ -14,14 +14,20 @@
   <div id="layoutHost"></div>
 
   <template id="pageTemplate">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="m-0">Validar Presenças</h5>
+
+    <div class="page-hdr">
+      <div>
+        <div class="page-eyebrow">Portal do Aluno / EE</div>
+        <div class="page-title">Validar Presenças</div>
+        <div class="page-sub">Confirma a tua presença nas sessões</div>
+      </div>
     </div>
 
     <div id="msgValidarPresencas" class="alert d-none"></div>
 
+    <div class="card">
     <div class="table-responsive">
-      <table class="table table-bordered table-striped align-middle">
+      <table class="table align-middle mb-0">
         <thead>
           <tr>
             <th>Aluno</th>
@@ -38,6 +44,7 @@
           </tr>
         </tbody>
       </table>
+    </div>
     </div>
   </template>
 

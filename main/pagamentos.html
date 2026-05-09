@@ -14,24 +14,38 @@
 
   <template id="pageTemplate">
 
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPagamento" data-roles="ADMIN,SUPER_ADMIN">
-        <i class="fa-solid fa-plus me-2"></i> Novo pagamento
+    <div class="page-hdr">
+      <div class="page-hdr-row">
+        <div>
+          <div class="page-eyebrow">Financeiro</div>
+          <div class="page-title">Pagamentos</div>
+          <div class="page-sub">Gestão de mensalidades e cobranças</div>
+        </div>
+        <div class="btn-group-row">
+          <input id="pesquisaPagamento" class="form-control" style="width:180px;" placeholder="Pesquisar...">
+          <select id="filtroEstado" class="form-select" style="width:150px;">
+            <option value="">Todos</option>
+            <option value="PENDENTE">Pendentes</option>
+            <option value="PAGO">Pagos</option>
+          </select>
+       <button
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#modalPagamento"
+        data-roles="ADMIN,SUPER_ADMIN">
+        
+        <i class="fa-solid fa-plus me-1"></i>
+        Novo pagamento
       </button>
-
-      <select id="filtroEstado" class="form-select" style="max-width: 220px;">
-        <option value="">Todos</option>
-        <option value="PENDENTE">Pendentes</option>
-        <option value="PAGO">Pagos</option>
-      </select>
-
-      <input id="pesquisaPagamento" class="form-control" placeholder="Pesquisar por aluno/descrição...">
+        </div>
+      </div>
     </div>
 
     <div id="msgPag" class="alert d-none"></div>
 
+    <div class="card">
     <div class="table-responsive">
-      <table class="table table-bordered table-striped align-middle">
+      <table class="table align-middle mb-0">
         <thead>
           <tr>
             <th style="width:90px;">ID</th>
@@ -45,6 +59,7 @@
         </thead>
         <tbody id="tblPagamentos"></tbody>
       </table>
+    </div>
     </div>
 
     <!-- MODAL: CRIAR PAGAMENTO (ADMIN) -->
@@ -112,14 +127,14 @@
   <script>
        requireAuth();
       setUserInfo();
-      applyRoleUI();
+   
     (async () => {
       await loadLayout({ pageTitle: "Pagamentos", activePage: "pagamentos" });
 
       const pageContent = document.getElementById("pageContent");
       const tpl = document.getElementById("pageTemplate");
       pageContent.appendChild(tpl.content.cloneNode(true));
-
+       applyRoleUI();
       if (typeof initPagamentos === "function") initPagamentos();
     })().catch(console.error);
   </script>

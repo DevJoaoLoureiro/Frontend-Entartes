@@ -15,29 +15,35 @@
 
   <template id="pageTemplate">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0">
-        <i class="fa-solid fa-bolt me-2"></i>Coachings (Sessões Abertas)
-      </h4>
+    <div class="page-hdr">
+      <div>
+        <div class="page-eyebrow">Gestão Escolar</div>
+        <div class="page-title">Coachings</div>
+        <div class="page-sub">Sessões abertas disponíveis para inscrição</div>
+      </div>
     </div>
 
     <div id="msgCoachings" class="alert d-none"></div>
 
-    <div class="table-responsive">
-      <table class="table table-bordered table-striped align-middle">
-        <thead>
-          <tr>
-            <th style="width:80px;">ID</th>
-            <th style="width:180px;">Início</th>
-            <th style="width:180px;">Fim</th>
-            <th style="width:140px;">Estado</th>
-            <th>Sumário</th>
-            <th style="width:260px;">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblCoachings"></tbody>
-      </table>
-    </div>
+    <div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:80px;">ID</th>
+          <th style="width:180px;">Início</th>
+          <th style="width:180px;">Fim</th>
+          <th style="width:140px;">Estado</th>
+          <th>Sumário</th>
+          <th style="width:120px;">Preço</th>
+          <th style="width:260px;">Ações</th>
+        </tr>
+      </thead>
+
+      <tbody id="tblCoachings"></tbody>
+    </table>
+  </div>
+</div>
 
     <!-- MODAL INSCRIÇÃO DE EDUCANDOS -->
     <div class="modal fade" id="modalEducandos" tabindex="-1" aria-hidden="true">

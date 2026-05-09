@@ -47,36 +47,36 @@ function initCoachings() {
       .replaceAll(">", "&gt;");
   }
 
-  function render() {
-    if (!lista.length) {
-      tbl.innerHTML = `<tr><td colspan="6" class="text-center">Sem coachings disponíveis.</td></tr>`;
-      return;
-    }
-
-    tbl.innerHTML = lista.map(s => `
-      <tr>
-        <td>${s.id}</td>
-        <td>${formatDT(s.inicio)}</td>
-        <td>${formatDT(s.fim)}</td>
-        <td>${escapeHtml(s.estado)}</td>
-        <td>${escapeHtml(s.sumario || "-")}</td>
-        <td>
-          ${perfil === "ALUNO" ? `
-            <button class="btn btn-sm btn-primary" onclick="inscreverMe(${s.id})">
-              Inscrever-me
-            </button>
-          ` : ""}
-
-          ${perfil === "ENCARREGADO" ? `
-            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEducandos(${s.id})">
-              Inscrever educando
-            </button>
-          ` : ""}
-        </td>
-      </tr>
-    `).join("");
+ function render() {
+  if (!lista.length) {
+    tbl.innerHTML = `<tr><td colspan="7" class="text-center">Sem coachings disponíveis.</td></tr>`;
+    return;
   }
 
+  tbl.innerHTML = lista.map(s => `
+    <tr>
+      <td>${s.id}</td>
+      <td>${formatDT(s.inicio)}</td>
+      <td>${formatDT(s.fim)}</td>
+      <td>${escapeHtml(s.estado)}</td>
+      <td>${escapeHtml(s.sumario || "-")}</td>
+      <td>€${Number(s.precoCoaching || 0).toFixed(2)}</td>
+      <td>
+        ${perfil === "ALUNO" ? `
+          <button class="btn btn-sm btn-primary" onclick="inscreverMe(${s.id})">
+            Inscrever-me
+          </button>
+        ` : ""}
+
+        ${perfil === "ENCARREGADO" ? `
+          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEducandos(${s.id})">
+            Inscrever educando
+          </button>
+        ` : ""}
+      </td>
+    </tr>
+  `).join("");
+}
   async function carregar() {
     try {
       lista = await apiGet("sessoes/abertas");

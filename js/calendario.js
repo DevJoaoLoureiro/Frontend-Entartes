@@ -1,100 +1,149 @@
 function initCalendario() {
   const user = getUser();
-
-  // Demo: o encarregado "vê" alunos associados
-  const aulas = [
-    { id: 101, aluno: "Ana Silva", turma: "Ballet Iniciados", tipo: "Ballet", data: "2026-02-13 18:00", estado: "Agendada" },
-    { id: 102, aluno: "Ana Silva", turma: "Ballet Iniciados", tipo: "Ballet", data: "2026-02-15 18:00", estado: "Agendada" },
-    { id: 201, aluno: "Carla Rocha", turma: "Hip Hop Kids", tipo: "Hip Hop", data: "2026-02-14 17:30", estado: "Agendada" },
-  ];
+  const role = user?.perfil || "";
 
   const tbl = document.getElementById("tblCalendario");
   const selAluno = document.getElementById("selAluno");
   const txtFiltro = document.getElementById("txtFiltro");
-
   const boxSelected = document.getElementById("boxSelected");
   const txtMotivo = document.getElementById("txtMotivo");
   const btnDesmarcar = document.getElementById("btnDesmarcar");
 
-  let selected = null;
+  let sessoes = [];
+  let selecionada = null;
 
-  function render(list) {
-    tbl.innerHTML = "";
-    list.forEach(a => {
-      const tr = document.createElement("tr");
-      tr.classList.add("pointer");
-      tr.innerHTML = `
-        <td>${a.id}</td>
-        <td>${a.aluno}</td>
-        <td>${a.turma}</td>
-        <td>${a.tipo}</td>
-        <td>${a.data}</td>
-        <td>${a.estado}</td>
-      `;
-      tr.addEventListener("click", () => {
-        selected = a;
-        boxSelected.innerHTML = `<b>Selecionada:</b> #${a.id} — ${a.aluno} — ${a.turma} — ${a.data}`;
-        btnDesmarcar.disabled = false;
-      });
-      tbl.appendChild(tr);
+  function escapeHtml(v) {
+    return String(v ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatDT(dt) {
+    if (!dt) return "-";
+    return new Date(dt).toLocaleString("pt-PT", {
+      dateStyle: "short",
+      timeStyle: "short"
     });
   }
 
-  function filterList() {
-    const a = selAluno.value;
-    const q = txtFiltro.value.trim().toLowerCase();
-    return aulas.filter(x => {
-      const okAluno = (a === "todos") || (x.aluno === a);
-      const okText = !q || (x.turma.toLowerCase().includes(q) || x.tipo.toLowerCase().includes(q));
-      return okAluno && okText;
+  function badgeEstado(s) {
+    if (s.vai === true) return `<span class="badge text-bg-success">Confirmada</span>`;
+    if (s.vai === false) return `<span class="badge text-bg-danger">Desmarcada</span>`;
+    return `<span class="badge text-bg-warning">Pendente</span>`;
+  }
+
+  function preencherFiltroAlunos() {
+    const nomes = [...new Set(sessoes.map(x => x.alunoNome).filter(Boolean))];
+
+    selAluno.innerHTML = `
+      <option value="todos">Todos</option>
+      ${nomes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
+    `;
+  }
+
+  function filtrar() {
+    const aluno = selAluno.value;
+    const q = (txtFiltro.value || "").trim().toLowerCase();
+
+    return sessoes.filter(s => {
+      if (aluno !== "todos" && s.alunoNome !== aluno) return false;
+
+      const bag = `
+        ${s.alunoNome || ""}
+        ${s.turmaNome || ""}
+        ${s.professorNome || ""}
+        ${s.tipoAulaNome || ""}
+      `.toLowerCase();
+
+      return !q || bag.includes(q);
     });
   }
 
-  selAluno.addEventListener("change", () => render(filterList()));
-  txtFiltro.addEventListener("input", () => render(filterList()));
+  function render() {
+    const lista = filtrar();
 
-  btnDesmarcar.addEventListener("click", () => {
-    if (!selected) return;
-    const motivo = txtMotivo.value.trim();
-    if (!motivo) {
-      alert("Escreve um motivo para desmarcar.");
+    if (!lista.length) {
+      tbl.innerHTML = `<tr><td colspan="6" class="text-center small-muted">Sem aulas para mostrar.</td></tr>`;
       return;
     }
 
-    // Guardar pedido (demo)
-    const requests = JSON.parse(localStorage.getItem("desmarcacoes") || "[]");
-    requests.unshift({
-      id: Date.now(),
-      aluno: selected.aluno,
-      sessaoId: selected.id,
-      data: selected.data,
-      turma: selected.turma,
-      motivo,
-      criadoEm: new Date().toISOString(),
-      criadoPor: user?.nome || "encarregado",
-      estado: "PENDENTE"
-    });
-    localStorage.setItem("desmarcacoes", JSON.stringify(requests));
+    tbl.innerHTML = lista.map(s => `
+      <tr style="cursor:pointer;" onclick="selecionarSessao(${s.sessaoId}, ${s.alunoId})">
+        <td>${s.sessaoId}</td>
+        <td>${escapeHtml(s.alunoNome || "-")}</td>
+        <td>${escapeHtml(s.turmaNome || "-")}</td>
+        <td>${escapeHtml(s.tipoAulaNome || "-")}</td>
+        <td>${formatDT(s.dataInicio)}</td>
+        <td>${badgeEstado(s)}</td>
+      </tr>
+    `).join("");
+  }
 
-    // Notificar professor (demo)
-    const notifs = loadNotifications();
-    notifs.unshift({
-      id: Date.now() + 1,
-      toRole: "PROFESSOR",
-      titulo: "Desmarcação de aula",
-      mensagem: `${selected.aluno} desmarcou a aula (${selected.turma} - ${selected.data}). Motivo: ${motivo}`,
-      lida: false,
-      createdAt: new Date().toISOString()
-    });
-    saveNotifications(notifs);
-    renderNotifyBell();
+  async function carregar() {
+    try {
+      // Usa o endpoint que já tens para EE/ALUNO
+      sessoes = await apiGet("sessoes/pendentes-confirmacao");
 
-    alert("Desmarcação enviada ao professor!");
-    txtMotivo.value = "";
-    btnDesmarcar.disabled = true;
-    selected = null;
-    boxSelected.textContent = "Nenhuma sessão selecionada.";
+      // Como o teu endpoint só devolve pendentes, forçamos estado visual pendente
+      sessoes = sessoes.map(s => ({
+        ...s,
+        vai: null,
+        tipoAulaNome: s.tipoAulaNome || "Aula"
+      }));
+
+      preencherFiltroAlunos();
+      render();
+    } catch (err) {
+      console.error(err);
+      tbl.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Erro ao carregar calendário.</td></tr>`;
+    }
+  }
+
+  window.selecionarSessao = function(sessaoId, alunoId) {
+    selecionada = sessoes.find(s => s.sessaoId === sessaoId && s.alunoId === alunoId);
+
+    if (!selecionada) return;
+
+    boxSelected.textContent = `${selecionada.alunoNome} — ${formatDT(selecionada.dataInicio)}`;
+    btnDesmarcar.disabled = false;
+  };
+
+  btnDesmarcar.addEventListener("click", async () => {
+    if (!selecionada) return;
+
+    const motivo = (txtMotivo.value || "").trim();
+
+    if (!motivo) {
+      alert("Indica o motivo da desmarcação.");
+      return;
+    }
+
+    try {
+      await apiPost(`sessoes/${selecionada.sessaoId}/confirmar`, {
+        alunoId: selecionada.alunoId,
+        vai: false,
+        motivo
+      });
+
+      selecionada.vai = false;
+
+      boxSelected.textContent = "Nenhuma sessão selecionada.";
+      txtMotivo.value = "";
+      btnDesmarcar.disabled = true;
+      selecionada = null;
+
+      await carregar();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Erro ao desmarcar aula.");
+    }
   });
 
-  render(aulas);
-};
+  selAluno.addEventListener("change", render);
+  txtFiltro.addEventListener("input", render);
+
+  carregar();
+}

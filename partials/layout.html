@@ -1,118 +1,140 @@
 <!-- MOBILE TOPBAR -->
-<nav class="navbar navbar-dark bg-dark d-lg-none px-3">
-  <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+<nav class="navbar d-lg-none px-3" style="background:var(--dark);min-height:56px;display:flex;align-items:center;justify-content:space-between;">
+  <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
     <i class="fa-solid fa-bars"></i>
   </button>
-
-  <span class="navbar-brand ms-2">Backoffice</span>
-
-  <a href="notificacoes.html" class="text-white position-relative text-decoration-none">
-    <i class="fa-solid fa-bell fs-5"></i>
+  <span style="font-family:'Playfair Display',serif;font-size:1rem;color:white;" id="brandTitle">Backoffice</span>
+  <a href="notificacoes.html" class="notif-btn" style="position:relative;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);">
+    <i class="fa-solid fa-bell"></i>
     <span id="notifyDot" class="notify-dot" style="display:none;"></span>
   </a>
 </nav>
 
 <!-- OFFCANVAS (MOBILE SIDEBAR) -->
-<div class="offcanvas offcanvas-start text-bg-dark d-lg-none" tabindex="-1" id="sidebarOffcanvas">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="brandTitle">Backoffice</h5>
+<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas">
+  <div class="offcanvas-header" style="border-bottom:1px solid rgba(255,255,255,0.06);padding:24px 20px 16px;">
+    <span style="font-family:'Playfair Display',serif;font-size:1rem;color:white;" id="brandTitleMobile">Backoffice</span>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="offcanvas-body p-0">
-    <div id="sidebarContentMobile"></div>
+    <div class="sb-section-label">Menu</div>
+    <div id="sidebarContentMobile" style="padding:0 10px;"></div>
+    <div style="padding:12px 10px;border-top:1px solid rgba(255,255,255,0.06);margin-top:auto;">
+      <button class="sb-logout" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Terminar Sessão
+      </button>
+    </div>
   </div>
 </div>
 
+<!-- DESKTOP LAYOUT -->
 <div class="d-flex">
-  <!-- DESKTOP SIDEBAR -->
-  <aside class="sidebar p-3 d-none d-lg-block">
-    <div class="brand mb-3" id="brandTitleDesktop">Backoffice</div>
-    <hr class="border-secondary">
-    <div id="sidebarContentDesktop"></div>
 
-    <hr class="border-secondary mt-4">
-    <button class="btn btn-outline-light w-100" onclick="logout()">
-      <i class="fa-solid fa-power-off me-2"></i> Logout
-    </button>
+  <!-- DESKTOP SIDEBAR -->
+  <aside class="sidebar d-none d-lg-flex">
+    <div class="sb-brand">
+      <div class="sb-brand-name" id="brandTitleDesktop">ent'<em>artes</em></div>
+      <div class="sb-brand-sub">escola de dança</div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbUserAvatar">?</div>
+      <div>
+        <div class="sb-user-name" id="sbUserName">—</div>
+        <div class="sb-user-role" id="sbUserRole">—</div>
+      </div>
+    </div>
+    <div class="sb-section-label">Menu</div>
+    <nav class="sb-nav" id="sidebarContentDesktop"></nav>
+    <div class="sb-bottom">
+      <button class="sb-logout" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Terminar Sessão
+      </button>
+    </div>
   </aside>
 
-  <!-- CONTENT -->
-  <main class="flex-grow-1">
-    <!-- DESKTOP TOPBAR -->
-    <div class="topbar px-4 py-3 d-none d-lg-flex justify-content-between align-items-center">
-      <h4 class="m-0" id="pageTitle">Página</h4>
-      <div class="d-flex align-items-center gap-3">
-        <a href="notificacoes.html" class="position-relative text-decoration-none text-dark">
-          <i class="fa-solid fa-bell fs-5"></i>
+  <!-- MAIN -->
+  <div class="main-wrapper">
+
+    <!-- TOPBAR -->
+    <div class="topbar d-none d-lg-flex">
+      <div class="topbar-breadcrumb">
+        ent'artes <span class="topbar-sep">›</span> <span id="pageTitle">Página</span>
+      </div>
+      <div class="topbar-right">
+        <a href="notificacoes.html" class="notif-btn" style="position:relative;">
+          <i class="fa-solid fa-bell"></i>
           <span id="notifyDotDesktop" class="notify-dot" style="display:none;"></span>
         </a>
-        <div class="small-muted">Utilizador: <b id="topUserInfo">-</b></div>
+        <div class="topbar-user">
+          Utilizador: <b id="topUserInfo">-</b>
+        </div>
       </div>
     </div>
 
-    <div class="p-4" id="pageContent"></div>
-  </main>
+    <!-- PAGE CONTENT -->
+    <div class="page-content" id="pageContent"></div>
+
+  </div>
 </div>
 
-<!-- SIDEBAR NAV -->
+<!-- SIDEBAR NAV TEMPLATE -->
 <template id="sidebarTemplate">
-  <nav class="nav flex-column px-3 px-lg-0">
+  <nav class="nav flex-column px-0">
 
-    <!-- ADMIN / SUPER ADMIN -->
     <a class="nav-link" data-page="dashboard" data-roles="ADMIN,SUPER_ADMIN" href="dashboard.html">
-      <i class="fa-solid fa-house me-2"></i> Dashboard
+      <i class="fa-solid fa-house"></i> Dashboard
     </a>
 
-    <!-- COMUM -->
-    <a class="nav-link" data-page="calendario" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR,ENCARREGADO,ALUNO" href="calendario.html">
-      <i class="fa-solid fa-calendar-days me-2"></i> Calendário
+    <a class="nav-link" data-page="calendario" data-roles="ENCARREGADO,ALUNO" href="calendario.html">
+      <i class="fa-solid fa-calendar-days"></i> Calendário
     </a>
 
-    <!-- GESTÃO ESCOLA -->
     <a class="nav-link" data-page="alunos" data-roles="ADMIN,SUPER_ADMIN" href="alunos.html">
-      <i class="fa-solid fa-user-graduate me-2"></i> Alunos
+      <i class="fa-solid fa-user-graduate"></i> Alunos
     </a>
 
     <a class="nav-link" data-page="turmas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="turmas.html">
-      <i class="fa-solid fa-users me-2"></i> Turmas
+      <i class="fa-solid fa-users"></i> Turmas
     </a>
 
     <a class="nav-link" data-page="sessoes" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="sessoes_aula.html">
-      <i class="fa-solid fa-clock me-2"></i> Sessões
+      <i class="fa-solid fa-clock"></i> Sessões
     </a>
 
     <a class="nav-link" data-page="coachings" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR,ENCARREGADO,ALUNO" href="coachings.html">
-      <i class="fa-solid fa-bolt me-2"></i> Coachings
+      <i class="fa-solid fa-bolt"></i> Coachings
     </a>
 
     <a class="nav-link" data-page="presencas" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR" href="presencas.html">
-      <i class="fa-solid fa-check me-2"></i> Presenças
+      <i class="fa-solid fa-check"></i> Presenças
     </a>
 
     <a class="nav-link" data-page="validar-presencas" data-roles="ENCARREGADO,ALUNO" href="presencas-validar.html">
-      <i class="fa-solid fa-circle-check me-2"></i> Validar Presenças
+      <i class="fa-solid fa-circle-check"></i> Validar Presenças
     </a>
 
-    <!-- ÁREA PÚBLICA / PORTAL -->
     <a class="nav-link" data-page="eventos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="eventos.html">
-      <i class="fa-solid fa-bullhorn me-2"></i> Eventos
+      <i class="fa-solid fa-bullhorn"></i> Eventos
     </a>
 
     <a class="nav-link" data-page="inventario" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="inventario.html">
-      <i class="fa-solid fa-boxes-stacked me-2"></i> Inventário
+      <i class="fa-solid fa-boxes-stacked"></i> Inventário
     </a>
 
     <a class="nav-link" data-page="marketplace" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="marketplace.html">
-      <i class="fa-solid fa-store me-2"></i> Marketplace
+      <i class="fa-solid fa-store"></i> Marketplace
     </a>
 
     <a class="nav-link" data-page="pagamentos" data-roles="ADMIN,SUPER_ADMIN,ENCARREGADO" href="pagamentos.html">
-      <i class="fa-solid fa-euro-sign me-2"></i> Pagamentos
+      <i class="fa-solid fa-euro-sign"></i> Pagamentos
     </a>
 
-    <!-- ADMIN -->
     <a class="nav-link" data-page="utilizadores" data-roles="ADMIN,SUPER_ADMIN" href="utilizadores.html">
-      <i class="fa-solid fa-user-gear me-2"></i> Utilizadores
+      <i class="fa-solid fa-user-gear"></i> Utilizadores
+    </a>
+
+    <a class="nav-link" data-page="notificacoes" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR,ENCARREGADO,ALUNO" href="notificacoes.html">
+      <i class="fa-solid fa-bell"></i> Notificações
     </a>
 
   </nav>

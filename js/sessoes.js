@@ -107,18 +107,27 @@ function initSessoes() {
     inputTipoAulaInfo.value = turma.tipoAulaNome || "";
   }
 
-  function atualizarModoSessao() {
-    const isCoaching = chkInscricaoAberta.checked;
+  
 
-    if (isCoaching) {
-      selectTurma.value = "";
-      selectTurma.disabled = true;
-      inputTipoAulaInfo.value = "Coaching / Sessão aberta";
-    } else {
-      selectTurma.disabled = false;
-      atualizarInfoTurma();
-    }
+  function atualizarModoSessao() {
+  const isCoaching = chkInscricaoAberta.checked;
+  const boxPrecoCoaching = document.getElementById("boxPrecoCoaching");
+  const inputPrecoCoaching = document.getElementById("precoCoaching");
+
+  if (isCoaching) {
+    selectTurma.value = "";
+    selectTurma.disabled = true;
+    inputTipoAulaInfo.value = "Coaching / Sessão aberta";
+    boxPrecoCoaching?.classList.remove("d-none");
+  } else {
+    selectTurma.disabled = false;
+    boxPrecoCoaching?.classList.add("d-none");
+
+    if (inputPrecoCoaching) inputPrecoCoaching.value = "0";
+
+    atualizarInfoTurma();
   }
+}
 
   function render() {
     // esta página mostra só sessões normais
@@ -224,9 +233,11 @@ function initSessoes() {
           ? parseInt(document.getElementById("maxAlunos").value, 10)
           : null,
         sumario: document.getElementById("sumario").value.trim() || null,
-        inscricaoAberta: isCoaching
+        inscricaoAberta: isCoaching,
+        precoCoaching: isCoaching
+          ? Number(document.getElementById("precoCoaching")?.value || 0)
+          : null
       };
-
       await apiPost("sessoes", dto);
 
       bootstrap.Modal.getInstance(modalSessaoEl)?.hide();

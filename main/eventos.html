@@ -13,15 +13,31 @@
   <div id="layoutHost"></div>
 
   <template id="pageTemplate">
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEvento" data-roles="ADMIN,SUPER_ADMIN">
-        <i class="fa-solid fa-plus me-2"></i> Novo evento
-      </button>
-      <input id="pesquisaEvento" class="form-control" placeholder="Pesquisar por título...">
+
+    <!-- ── Cabeçalho ─────────────────────────────────────────── -->
+    <div class="page-hdr">
+      <div class="page-hdr-row">
+        <div>
+          <div class="page-eyebrow">Portal</div>
+          <div class="page-title">Eventos</div>
+          <div class="page-sub">Publicações e eventos da escola</div>
+        </div>
+        <div class="btn-group-row">
+          <input id="pesquisaEvento" class="form-control" style="width:200px;" placeholder="Pesquisar por título...">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEvento" data-roles="ADMIN,SUPER_ADMIN">
+            <i class="fa-solid fa-plus me-1"></i> Novo evento
+          </button>
+        </div>
+      </div>
     </div>
 
+    <!-- ── Lista de cards ─────────────────────────────────────── -->
     <div class="row g-3" id="listaEventos"></div>
 
+
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL — Criar / Editar Evento (Admin)
+    ══════════════════════════════════════════════════════════ -->
     <div class="modal fade" id="modalEvento" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -59,6 +75,11 @@
                     <label class="form-check-label" for="evtPublico">Visível para encarregados</label>
                   </div>
                 </div>
+                <!-- Professores — só visível para Admin, preenchido pelo JS -->
+                <div class="col-12" id="wrapProfessoresEvento">
+                  <label class="form-label">Professores do evento</label>
+                  <div id="listaProfessoresEvento" class="border rounded p-3" style="max-height:200px;overflow:auto;"></div>
+                </div>
               </div>
             </div>
 
@@ -70,6 +91,68 @@
         </div>
       </div>
     </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL — Inscrever Educandos (Encarregado)
+    ══════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="modalInscreverEducandosEvento" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="formInscreverEducandosEvento">
+            <div class="modal-header">
+              <h5 class="modal-title">Inscrever educandos</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div id="msgModalEducandosEvento" class="alert d-none mb-3"></div>
+              <div id="listaEducandosEvento" class="border rounded p-3"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Inscrever</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL — Inscritos no Evento (Admin / Professor)
+    ══════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="modalInscritosEvento" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Inscritos no evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="msgModalInscritosEvento" class="alert d-none mb-3"></div>
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">ID</th>
+                    <th>Aluno</th>
+                    <th style="width:160px;">Inscrito em</th>
+                    <th style="width:160px;">Inscrito por</th>
+                    <th style="width:150px;">Avaliação</th>
+                    <th style="width:120px;">Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="tblInscritosEvento"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -79,10 +162,10 @@
   <script src="../js/eventos.js"></script>
 
   <script>
+    requireAuth();
+    setUserInfo();
+    applyRoleUI();
 
-      requireAuth();
-      setUserInfo();
-      applyRoleUI();
     (async () => {
       await loadLayout({ pageTitle: "Eventos", activePage: "eventos" });
 
@@ -90,7 +173,6 @@
       const tpl = document.getElementById("pageTemplate");
       pageContent.appendChild(tpl.content.cloneNode(true));
 
-      // ✅ chama a função certa
       if (typeof initEventos === "function") initEventos();
     })().catch(console.error);
   </script>

@@ -2,13 +2,6 @@ function initInventario() {
   const user = getUser();
   const role = user?.perfil;
 
-  // MOCK
-  let itens = [
-    { id: 1, nome: "Traje Ballet Rosa", categoria: "Trajes", tamanho: "S", qtdTotal: 3, qtdDisp: 2, preco: 12.5, ativo: true },
-    { id: 2, nome: "Sapatos Flamenco", categoria: "Sapatos", tamanho: "36", qtdTotal: 2, qtdDisp: 1, preco: 8.0, ativo: true },
-    { id: 3, nome: "Tiara brilhante", categoria: "Acessórios", tamanho: "", qtdTotal: 5, qtdDisp: 5, preco: 3.5, ativo: true },
-  ];
-
   const box = document.getElementById("listaInventario");
   const pesquisa = document.getElementById("pesquisaItem");
   const filtroCat = document.getElementById("filtroCategoria");
@@ -17,12 +10,15 @@ function initInventario() {
   const formItem = document.getElementById("formItem");
   const formAluguer = document.getElementById("formAluguer");
 
-  function showMsg(text, type) {
+  let itens = [];
+  let educandos = [];
+
+  function showMsg(text, type = "info") {
     if (!msg) return;
     msg.className = `alert alert-${type}`;
     msg.textContent = text;
     msg.classList.remove("d-none");
-    setTimeout(() => msg.classList.add("d-none"), 2500);
+    setTimeout(() => msg.classList.add("d-none"), 3000);
   }
 
   function podeAdmin() {
@@ -30,7 +26,26 @@ function initInventario() {
   }
 
   function canRent() {
-    return role === "ENCARREGADO" || podeAdmin();
+    return role === "ENCARREGADO" || role === "ALUNO";
+  }
+
+  function escapeHtml(v) {
+    return String(v ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getImageUrl(item) {
+    if (!item.imagemUrl) return null;
+
+    if (item.imagemUrl.startsWith("http")) {
+      return item.imagemUrl;
+    }
+
+    return `${API_BASE_URL.replace("/api", "")}${item.imagemUrl}`;
   }
 
   function filterList() {
@@ -40,20 +55,22 @@ function initInventario() {
     return itens
       .filter(i => i.ativo !== false)
       .filter(i => !cat || i.categoria === cat)
-      .filter(i => !q || (i.nome + " " + (i.categoria || "")).toLowerCase().includes(q));
+      .filter(i => !q || `${i.nome} ${i.categoria || ""}`.toLowerCase().includes(q));
   }
 
   function card(i) {
-    const disponivel = i.qtdDisp > 0;
+    const disponivel = i.quantidadeDisponivel > 0;
+    const imgUrl = getImageUrl(i);
+
+    const img = imgUrl
+      ? `<img src="${escapeHtml(imgUrl)}" class="img-fluid rounded mb-3" style="height:180px;width:100%;object-fit:cover;">`
+      : `<div class="bg-light rounded mb-3 d-flex align-items-center justify-content-center" style="height:180px;">
+           <i class="fa-solid fa-image text-muted fa-2x"></i>
+         </div>`;
+
     const badge = disponivel
       ? `<span class="badge text-bg-success">Disponível</span>`
       : `<span class="badge text-bg-danger">Indisponível</span>`;
-
-    const btnAdmin = podeAdmin()
-      ? `<button class="btn btn-sm btn-outline-danger ms-2" onclick="removerItem(${i.id})">
-           <i class="fa-solid fa-trash"></i>
-         </button>`
-      : ``;
 
     const btnRent = canRent()
       ? `<button class="btn btn-sm btn-outline-primary ${disponivel ? "" : "disabled"}" onclick="abrirAluguer(${i.id})">
@@ -64,22 +81,24 @@ function initInventario() {
     return `
       <div class="col-md-6 col-lg-4">
         <div class="card card-soft p-3 h-100">
+          ${img}
+
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <h6 class="mb-1">${i.nome}</h6>
-              <div class="small-muted">${i.categoria}${i.tamanho ? " • " + i.tamanho : ""}</div>
+              <h6 class="mb-1">${escapeHtml(i.nome)}</h6>
+              <div class="small-muted">
+                ${escapeHtml(i.categoria || "-")}${i.tamanho ? " • " + escapeHtml(i.tamanho) : ""}
+              </div>
             </div>
-            <div class="d-flex align-items-center">
-              ${badge}
-              ${btnAdmin}
-            </div>
+            ${badge}
           </div>
 
           <hr class="my-2">
 
-          <div class="small"><b>Total:</b> ${i.qtdTotal}</div>
-          <div class="small"><b>Disponível:</b> ${i.qtdDisp}</div>
-          <div class="small"><b>Preço:</b> €${Number(i.preco).toFixed(2)}</div>
+          <div class="small"><b>Total:</b> ${i.quantidadeTotal}</div>
+          <div class="small"><b>Disponível:</b> ${i.quantidadeDisponivel}</div>
+          <div class="small"><b>Preço aluguer:</b> €${Number(i.precoAluguer || 0).toFixed(2)}</div>
+          <div class="small"><b>Localização:</b> ${escapeHtml(i.localizacao || "-")}</div>
 
           <div class="mt-3">
             ${btnRent}
@@ -89,22 +108,44 @@ function initInventario() {
     `;
   }
 
-  function render(list) {
+  function render() {
     if (!box) return;
-    box.innerHTML = list.map(card).join("") || `<div class="small-muted">Sem itens.</div>`;
+    const lista = filterList();
+    box.innerHTML = lista.map(card).join("") || `<div class="small-muted">Sem itens.</div>`;
   }
 
-  // Admin: remover (mock)
-  window.removerItem = (id) => {
-    if (!podeAdmin()) return;
-    if (!confirm("Remover este item do inventário?")) return;
-    itens = itens.filter(i => i.id !== id);
-    render(filterList());
-    showMsg("Item removido.", "success");
-  };
+  async function carregarItens() {
+    try {
+      itens = await apiGet("inventario");
+      render();
+    } catch (err) {
+      console.error(err);
+      showMsg(err.message || "Erro ao carregar inventário.", "danger");
+    }
+  }
 
-  // Encarregado: abrir modal pedido
-  window.abrirAluguer = (id) => {
+  async function carregarEducandos() {
+    if (role !== "ENCARREGADO") return;
+
+    try {
+      educandos = await apiGet("alunos/meus-educandos");
+
+      const select = document.getElementById("aluguerAlunoId");
+      if (!select) return;
+
+      select.innerHTML = `
+        <option value="">Selecionar educando</option>
+        ${educandos.map(e => `
+          <option value="${e.id}">${escapeHtml(e.nome)}</option>
+        `).join("")}
+      `;
+    } catch (err) {
+      console.error(err);
+      showMsg(err.message || "Erro ao carregar educandos.", "danger");
+    }
+  }
+
+  window.abrirAluguer = async function(id) {
     const i = itens.find(x => x.id === id);
     if (!i) return;
 
@@ -112,66 +153,117 @@ function initInventario() {
     document.getElementById("aluguerItemNome").value = i.nome;
     document.getElementById("aluguerTamanho").value = i.tamanho || "-";
 
-    // datas default
-    const hoje = new Date();
-    const d1 = hoje.toISOString().substring(0, 10);
-    document.getElementById("aluguerInicio").value = d1;
-    document.getElementById("aluguerFim").value = d1;
+    const hoje = new Date().toISOString().substring(0, 10);
+    document.getElementById("aluguerInicio").value = hoje;
+    document.getElementById("aluguerFim").value = hoje;
+
+    await carregarEducandos();
 
     const modal = new bootstrap.Modal(document.getElementById("modalAluguer"));
     modal.show();
   };
 
-  if (pesquisa) pesquisa.addEventListener("input", () => render(filterList()));
-  if (filtroCat) filtroCat.addEventListener("change", () => render(filterList()));
+  if (pesquisa) pesquisa.addEventListener("input", render);
+  if (filtroCat) filtroCat.addEventListener("change", render);
 
-  // Admin: criar item (mock)
   if (formItem) {
-    formItem.addEventListener("submit", (e) => {
+    formItem.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       if (!podeAdmin()) return;
 
-      const novo = {
-        id: itens.length ? Math.max(...itens.map(x => x.id)) + 1 : 1,
-        nome: document.getElementById("invNome").value.trim(),
-        categoria: document.getElementById("invCategoria").value,
-        tamanho: document.getElementById("invTamanho").value.trim(),
-        qtdTotal: Number(document.getElementById("invQtdTotal").value || 0),
-        qtdDisp: Number(document.getElementById("invQtdDisp").value || 0),
-        preco: Number(document.getElementById("invPreco").value || 0),
-        ativo: true
-      };
+      try {
+        const qtdTotal = Number(document.getElementById("invQtdTotal").value || 0);
+        const qtdDisp = Number(document.getElementById("invQtdDisp").value || 0);
 
-      itens.unshift(novo);
+        if (qtdDisp > qtdTotal) {
+          showMsg("Quantidade disponível não pode ser maior que a total.", "warning");
+          return;
+        }
 
-      bootstrap.Modal.getInstance(document.getElementById("modalItem"))?.hide();
-      formItem.reset();
-      render(filterList());
-      showMsg("Item criado.", "success");
+        const fd = new FormData();
+
+        fd.append("nome", document.getElementById("invNome").value.trim());
+        fd.append("categoria", document.getElementById("invCategoria").value);
+        fd.append("tamanho", document.getElementById("invTamanho").value.trim() || "");
+        fd.append("quantidadeTotal", qtdTotal);
+        fd.append("quantidadeDisponivel", qtdDisp);
+        fd.append("precoAluguer", Number(document.getElementById("invPreco").value || 0));
+        fd.append("localizacao", document.getElementById("invLocalizacao").value.trim() || "");
+
+        const img = document.getElementById("invImagem")?.files?.[0];
+        if (img) fd.append("imagem", img);
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(`${API_BASE_URL}/inventario`, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: fd
+        });
+
+        const text = await res.text();
+
+        if (!res.ok) {
+          throw new Error(text || "Erro ao criar item.");
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("modalItem"))?.hide();
+        formItem.reset();
+
+        showMsg("Item criado com sucesso.", "success");
+        await carregarItens();
+      } catch (err) {
+        console.error(err);
+        showMsg(err.message || "Erro ao criar item.", "danger");
+      }
     });
   }
 
-  // Encarregado: enviar pedido (mock)
   if (formAluguer) {
-    formAluguer.addEventListener("submit", (e) => {
+    formAluguer.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const itemId = Number(document.getElementById("aluguerItemId").value);
-      const inicio = document.getElementById("aluguerInicio").value;
-      const fim = document.getElementById("aluguerFim").value;
+      try {
+        const itemId = Number(document.getElementById("aluguerItemId").value);
 
-      if (!inicio || !fim) {
-        showMsg("Seleciona as datas.", "danger");
-        return;
+        let alunoId = null;
+
+       if (role === "ENCARREGADO") {
+          alunoId = Number(document.getElementById("aluguerAlunoId").value);
+
+          if (!alunoId) {
+            showMsg("Seleciona um educando.", "warning");
+            return;
+          }
+        }
+
+        if (role === "ALUNO") {
+          const aluno = await apiGet("alunos/me"); // tens de ter este endpoint
+
+          if (!aluno || !aluno.id) {
+            showMsg("Aluno não encontrado.", "danger");
+            return;
+          }
+
+          alunoId = aluno.id;
+        }
+
+        await apiPost(`inventario/${itemId}/alugar`, alunoId);
+
+        bootstrap.Modal.getInstance(document.getElementById("modalAluguer"))?.hide();
+        formAluguer.reset();
+
+        showMsg("Aluguer registado com sucesso.", "success");
+        await carregarItens();
+      } catch (err) {
+        console.error(err);
+        showMsg(err.message || "Erro ao alugar item.", "danger");
       }
-
-      // aqui no futuro: POST /api/alugueres
-      bootstrap.Modal.getInstance(document.getElementById("modalAluguer"))?.hide();
-      formAluguer.reset();
-
-      showMsg("Pedido de aluguer enviado (mock).", "success");
     });
   }
 
-  render(filterList());
+  carregarItens();
 }

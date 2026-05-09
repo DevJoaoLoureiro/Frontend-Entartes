@@ -5,7 +5,7 @@ async function loadLayout({ pageTitle, activePage }) {
   const html = await fetch("../partials/layout.html").then(r => r.text());
   host.innerHTML = html;
 
-  // titulo
+  // titulo no topbar
   const titleEl = document.getElementById("pageTitle");
   if (titleEl) titleEl.textContent = pageTitle || "Página";
 
@@ -21,6 +21,9 @@ async function loadLayout({ pageTitle, activePage }) {
     mobile.appendChild(tpl.content.cloneNode(true));
   }
 
+  // preencher utilizador na sidebar
+  _fillSidebarUser();
+
   // ativa menu
   if (typeof setActiveMenu === "function" && activePage) {
     setActiveMenu(activePage);
@@ -30,4 +33,25 @@ async function loadLayout({ pageTitle, activePage }) {
   if (typeof requireAuth === "function") requireAuth();
   if (typeof setUserInfo === "function") setUserInfo();
   if (typeof applyRoleUI === "function") applyRoleUI();
+}
+
+function _fillSidebarUser() {
+  const userStr = localStorage.getItem("user");
+  if (!userStr) return;
+  try {
+    const user = JSON.parse(userStr);
+    const nameEl = document.getElementById("sbUserName");
+    const roleEl = document.getElementById("sbUserRole");
+    const avatarEl = document.getElementById("sbUserAvatar");
+    if (nameEl) nameEl.textContent = user.nome || "—";
+    if (roleEl) roleEl.textContent = user.perfil || "—";
+    if (avatarEl) {
+      const name = user.nome || "";
+      const parts = name.trim().split(" ");
+      const initials = parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : (name[0] || "?").toUpperCase();
+      avatarEl.textContent = initials;
+    }
+  } catch (_) {}
 }

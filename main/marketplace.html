@@ -14,18 +14,25 @@
 
   <template id="pageTemplate">
 
-    <div class="d-flex gap-2 mb-3">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAnuncio" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN">
-        <i class="fa-solid fa-plus me-2"></i> Novo anúncio
-      </button>
-
-      <input id="pesquisaAnuncio" class="form-control" placeholder="Pesquisar por título...">
-
-      <select id="filtroTipo" class="form-select" style="max-width: 220px;">
-        <option value="">Todos</option>
-        <option value="VENDA">Venda</option>
-        <option value="ALUGUER">Aluguer</option>
-      </select>
+    <div class="page-hdr">
+      <div class="page-hdr-row">
+        <div>
+          <div class="page-eyebrow">Portal</div>
+          <div class="page-title">Marketplace</div>
+          <div class="page-sub">Anúncios de venda e aluguer entre a comunidade escolar</div>
+        </div>
+        <div class="btn-group-row">
+          <input id="pesquisaAnuncio" class="form-control" style="width:180px;" placeholder="Pesquisar...">
+          <select id="filtroTipo" class="form-select" style="width:150px;">
+            <option value="">Todos</option>
+            <option value="VENDA">Venda</option>
+            <option value="ALUGUER">Aluguer</option>
+          </select>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAnuncio" data-roles="ENCARREGADO,ADMIN,SUPER_ADMIN">
+            <i class="fa-solid fa-plus me-1"></i> Novo anúncio
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="msgMarketplace" class="alert d-none"></div>

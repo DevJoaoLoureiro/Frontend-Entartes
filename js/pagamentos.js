@@ -5,170 +5,150 @@ function initPagamentos() {
   const tbl = document.getElementById("tblPagamentos");
   const filtro = document.getElementById("filtroEstado");
   const pesquisa = document.getElementById("pesquisaPagamento");
-  const form = document.getElementById("formPagamento");
   const msg = document.getElementById("msgPag");
 
-  function showMsg(text, type) {
+  let pagamentos = [];
+
+  function showMsg(text, type = "info") {
+    if (!msg) return;
     msg.className = `alert alert-${type}`;
     msg.textContent = text;
     msg.classList.remove("d-none");
-    setTimeout(() => msg.classList.add("d-none"), 2200);
-  }
-
-  function loadPays() {
-    try { return JSON.parse(localStorage.getItem("pagamentos") || "[]"); } catch { return []; }
-  }
-  function savePays(arr) {
-    localStorage.setItem("pagamentos", JSON.stringify(arr));
-  }
-
-  let pagamentos = loadPays();
-
-  // seed (1x)
-  if (!pagamentos.length) {
-    pagamentos = [
-      { id: 1, aluno: "Maria Silva", desc: "Mensalidade Fevereiro", valor: 25.00, venc: "2026-02-10", estado: "PENDENTE" },
-      { id: 2, aluno: "João Costa", desc: "Aluguer Traje", valor: 12.50, venc: "2026-02-05", estado: "PAGO" },
-      { id: 3, aluno: "Inês Rocha", desc: "Mensalidade Março", valor: 25.00, venc: "2026-03-10", estado: "PENDENTE" },
-    ];
-    savePays(pagamentos);
+    setTimeout(() => msg.classList.add("d-none"), 3000);
   }
 
   function isAdmin() {
     return role === "ADMIN" || role === "SUPER_ADMIN";
   }
 
-  // Encarregado: para já vê tudo (mock). Depois no backend filtras pelos filhos.
-  function visible(p) {
-    if (isAdmin()) return true;
-    if (role === "ENCARREGADO") return true;
-    return false; // professor não vê pagamentos
+  function escapeHtml(v) {
+    return String(v ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  function filterList() {
-    const f = (filtro?.value || "").trim();
-    const q = (pesquisa?.value || "").trim().toLowerCase();
-
-    return pagamentos
-      .filter(visible)
-      .filter(p => !f || p.estado === f)
-      .filter(p => !q || ((p.aluno || "") + " " + (p.desc || "")).toLowerCase().includes(q))
-      .sort((a,b) => a.id - b.id);
+  function formatDate(dt) {
+    if (!dt) return "-";
+    return new Date(dt).toLocaleDateString("pt-PT");
   }
 
   function badge(estado) {
-    return estado === "PAGO"
-      ? `<span class="badge text-bg-success">Pago</span>`
-      : `<span class="badge text-bg-warning">Pendente</span>`;
+    const e = String(estado || "").toUpperCase();
+
+    if (e === "PAGO") return `<span class="badge text-bg-success">Pago</span>`;
+    if (e === "CANCELADO") return `<span class="badge text-bg-danger">Cancelado</span>`;
+
+    return `<span class="badge text-bg-warning">Pendente</span>`;
+  }
+
+  async function carregarPagamentos() {
+    try {
+      if (isAdmin()) {
+        pagamentos = await apiGet("pagamentos");
+      } else if (role === "ENCARREGADO" || role === "ALUNO") {
+        pagamentos = await apiGet("pagamentos/meus");
+      } else {
+        pagamentos = [];
+      }
+
+      render();
+    } catch (err) {
+      console.error(err);
+      showMsg(err.message || "Erro ao carregar pagamentos.", "danger");
+      tbl.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Erro ao carregar pagamentos.</td></tr>`;
+    }
+  }
+
+  function filterList() {
+    const f = (filtro?.value || "").trim().toUpperCase();
+    const q = (pesquisa?.value || "").trim().toLowerCase();
+
+    return pagamentos
+      .filter(p => !f || String(p.estado || "").toUpperCase() === f)
+      .filter(p => {
+        if (!q) return true;
+
+        const bag = `
+          ${p.nomeAluno || ""}
+          ${p.descricao || ""}
+          ${p.referencia || ""}
+          ${p.tipo || ""}
+          ${p.estado || ""}
+        `.toLowerCase();
+
+        return bag.includes(q);
+      })
+      .sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0));
   }
 
   function render() {
     const list = filterList();
 
-    tbl.innerHTML = list.map(p => {
-      const btnAdmin = isAdmin()
-        ? `
-          <button class="btn btn-sm btn-outline-success me-2" onclick="marcarPago(${p.id})">
-            <i class="fa-solid fa-check"></i> Marcar pago
-          </button>
-          <button class="btn btn-sm btn-outline-danger" onclick="removerPagamento(${p.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        `
-        : ``;
+    if (!tbl) return;
 
-      const btnEnc = (role === "ENCARREGADO" && p.estado === "PENDENTE")
-        ? `
-          <button class="btn btn-sm btn-outline-primary" onclick="pagar(${p.id})">
-            <i class="fa-solid fa-credit-card"></i> Pagar
-          </button>
-        `
-        : ``;
+    if (!list.length) {
+      tbl.innerHTML = `<tr><td colspan="7" class="text-center small-muted">Sem pagamentos.</td></tr>`;
+      return;
+    }
 
-      return `
-        <tr>
-          <td>${p.id}</td>
-          <td>${p.aluno}</td>
-          <td>${p.desc}</td>
-          <td>€${Number(p.valor).toFixed(2)}</td>
-          <td>${p.venc}</td>
-          <td>${badge(p.estado)}</td>
-          <td class="text-nowrap">
-            ${btnEnc}
-            ${btnAdmin}
-          </td>
-        </tr>
-      `;
-    }).join("") || `<tr><td colspan="7" class="text-center small-muted">Sem registos.</td></tr>`;
+    tbl.innerHTML = list.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${escapeHtml(p.nomeAluno || "-")}</td>
+        <td>
+          <div><b>${escapeHtml(p.tipo || "-")}</b></div>
+          <div class="small-muted">${escapeHtml(p.descricao || "-")}</div>
+          <div class="small text-muted">${escapeHtml(p.referencia || "")}</div>
+        </td>
+        <td>€${Number(p.valor || 0).toFixed(2)}</td>
+        <td>${formatDate(p.criadoEm)}</td>
+        <td>${badge(p.estado)}</td>
+        <td class="text-nowrap">
+          ${isAdmin() && String(p.estado || "").toUpperCase() === "PENDENTE" ? `
+            <button class="btn btn-sm btn-outline-success me-2" onclick="marcarPago(${p.id})">
+              <i class="fa-solid fa-check"></i> Marcar pago
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="cancelarPagamento(${p.id})">
+              <i class="fa-solid fa-ban"></i> Cancelar
+            </button>
+          ` : "-"}
+        </td>
+      </tr>
+    `).join("");
   }
 
-  window.pagar = (id) => {
-    // mock: só marca como pago
-    pagamentos = pagamentos.map(p => p.id === id ? { ...p, estado: "PAGO" } : p);
-    savePays(pagamentos);
-    render();
-    showMsg("Pagamento efetuado (mock).", "success");
+  window.marcarPago = async function(id) {
+    if (!isAdmin()) return;
 
-    // opcional: cria notificação para admin
-    if (typeof loadNotifications === "function" && typeof saveNotifications === "function") {
-      const notifs = loadNotifications();
-      notifs.unshift({
-        id: Date.now(),
-        toRole: "ADMIN",
-        titulo: "Pagamento recebido",
-        mensagem: `Pagamento #${id} marcado como pago (mock).`,
-        lida: false,
-        createdAt: new Date().toISOString()
-      });
-      saveNotifications(notifs);
-      if (typeof renderNotifyBell === "function") renderNotifyBell();
+    try {
+      await apiPatch(`pagamentos/${id}/pagar`, {});
+      showMsg("Pagamento marcado como pago.", "success");
+      await carregarPagamentos();
+    } catch (err) {
+      console.error(err);
+      showMsg(err.message || "Erro ao marcar pagamento.", "danger");
     }
   };
 
-  window.marcarPago = (id) => {
+  window.cancelarPagamento = async function(id) {
     if (!isAdmin()) return;
-    pagamentos = pagamentos.map(p => p.id === id ? { ...p, estado: "PAGO" } : p);
-    savePays(pagamentos);
-    render();
-    showMsg("Marcado como pago.", "success");
-  };
+    if (!confirm("Cancelar este pagamento?")) return;
 
-  window.removerPagamento = (id) => {
-    if (!isAdmin()) return;
-    if (!confirm("Remover pagamento?")) return;
-    pagamentos = pagamentos.filter(p => p.id !== id);
-    savePays(pagamentos);
-    render();
-    showMsg("Pagamento removido.", "success");
+    try {
+      await apiPatch(`pagamentos/${id}/cancelar`, {});
+      showMsg("Pagamento cancelado.", "success");
+      await carregarPagamentos();
+    } catch (err) {
+      console.error(err);
+      showMsg(err.message || "Erro ao cancelar pagamento.", "danger");
+    }
   };
 
   filtro?.addEventListener("change", render);
   pesquisa?.addEventListener("input", render);
 
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (!isAdmin()) return;
-
-      const novo = {
-        id: pagamentos.length ? Math.max(...pagamentos.map(x => x.id)) + 1 : 1,
-        aluno: document.getElementById("pagAluno").value.trim(),
-        desc: document.getElementById("pagDesc").value.trim(),
-        valor: Number(document.getElementById("pagValor").value || 0),
-        venc: document.getElementById("pagVenc").value,
-        estado: document.getElementById("pagEstado").value
-      };
-
-      pagamentos.unshift(novo);
-      savePays(pagamentos);
-
-      bootstrap.Modal.getInstance(document.getElementById("modalPagamento"))?.hide();
-      form.reset();
-
-      render();
-      showMsg("Pagamento criado.", "success");
-    });
-  }
-
-  render();
+  carregarPagamentos();
 }

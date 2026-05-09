@@ -23,6 +23,43 @@ async function apiPatch(path, body) {
   return text ? JSON.parse(text) : null;
 }
 
+async function apiPut(endpoint, data) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}/${endpoint}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(txt || `PUT ${endpoint} falhou`);
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function apiDelete(endpoint) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}/${endpoint}`, {
+    method: "DELETE",
+    headers: token ? { "Authorization": `Bearer ${token}` } : {}
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(txt || `DELETE ${endpoint} falhou`);
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+
 async function apiGet(endpoint) {
   const token = localStorage.getItem("token");
   const res = await fetch(`${API_BASE_URL}/${endpoint}`, {

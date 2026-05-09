@@ -14,18 +14,28 @@
   <div id="layoutHost"></div>
 
   <template id="pageTemplate">
-    <div class="d-flex gap-2 mb-3 align-items-center">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTurma" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR">
-        <i class="fa-solid fa-plus me-2"></i> Nova turma
-      </button>
 
-      <input id="pesquisaTurma" class="form-control" placeholder="Pesquisar turma...">
+    <div class="page-hdr">
+      <div class="page-hdr-row">
+        <div>
+          <div class="page-eyebrow">Gestão Escolar</div>
+          <div class="page-title">Turmas</div>
+          <div class="page-sub">Gerir turmas e alunos inscritos</div>
+        </div>
+        <div class="btn-group-row">
+          <input id="pesquisaTurma" class="form-control" style="width:200px;" placeholder="Pesquisar turma...">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTurma" data-roles="ADMIN,SUPER_ADMIN,PROFESSOR">
+            <i class="fa-solid fa-plus me-1"></i> Nova turma
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="msgTurmas" class="alert d-none"></div>
 
-    <div class="table-responsive mb-4">
-      <table class="table table-bordered table-striped align-middle">
+    <div class="card mb-4">
+    <div class="table-responsive">
+      <table class="table align-middle">
         <thead>
           <tr>
             <th style="width:80px;">ID</th>
@@ -38,6 +48,7 @@
         </thead>
         <tbody id="tblTurmas"></tbody>
       </table>
+    </div>
     </div>
 
     <div id="secaoTurmaDetalhe" class="d-none">
@@ -64,7 +75,7 @@
           </div>
 
           <div class="table-responsive">
-            <table class="table table-bordered align-middle">
+            <table class="table align-middle">
               <thead>
                 <tr>
                   <th style="width:100px;">ID</th>
